@@ -6,7 +6,8 @@
 - [Utilisation](#utilisation)
 - [Contribuer](#contribuer)
 - [Licence](#licence)
-- [Calculatrice à 3 boutons en utilisant Tkinter](#calculatrice_3boutons)
+- [Scrapping de Fromages à partir d'une Url](#scrapping_fromage.py)
+- [Test_scrapping de Fromages](#test_scrapping_fromages.py)
 
 ## Introduction <a name="introduction"></a>
 Ce répertoire est conçu durant ma formation POEI Développeur Applicatif Python, afin d'intégrer l'entreprise Pharma Pilot à Cournond'Auvergne.<br>
@@ -27,49 +28,118 @@ De nombreux cours théoriques et pratiques sont réalisés pour consolider notre
 ## Licence <a name="licence"></a>
 Tout droit réservé à moi même, Monsieur Reviron Jérôme.
 
-# Calculatrice à 3 boutons en utilisant Tkinter <a name="calculatrice_3boutons"></a>
-Ce programme Python nommé "calculatrice_3boutons.py" présente une calculatrice simple avec une interface graphique construite à l'aide de la bibliothèque Tkinter.<br>
-La calculatrice est conçue pour fonctionner avec trois boutons principaux et permet à l'utilisateur de naviguer à travers une liste de caractères à l'aide de boutons de défilement.
+# Scrapping de Fromages à partir d'une Url <a name="scrapping_fromage.py"></a>
+Ce script Python, scrapping_fromage.py, propose une solution complète pour extraire, transformer et charger (ETL) des données sur les fromages à partir d'une source en ligne. Voici un résumé des fonctionnalités et des spécificités de ce script.<br>
+L'Url du site scrappé est : https://www.laboitedufromager.com/liste-des-fromages-par-ordre-alphabetique/.
 
 ### Fonctionnalités
-- Interface Graphique Intuitive: La calculatrice dispose d'une interface utilisateur simple et intuitive construite avec Tkinter.
-- Boutons de Défilement: Utilisez les boutons "↑" et "↓" pour faire défiler une liste de caractères.
-- Validation des Choix: Appuyez sur le bouton "Valider" pour confirmer votre choix. La calculatrice réagit en conséquence au caractère sélectionné.
-- Fonction de Redémarrage: Si le caractère "R" est sélectionné, l'application peut être redémarrée pour un nouvel ensemble d'opérations.
--Prévention de la Division par Zéro: Lorsque le caractère "=" est sélectionné, la calculatrice vérifie la possibilité de division par zéro et affiche un message d'erreur le cas échéant.
+-**Extraction, Transformation et Chargement des Données**: La classe FromageETL est conçue pour effectuer des opérations ETL sur les données relatives aux fromages. Elle permet de récupérer des données depuis une source, de les traiter, de les stocker dans une base de données SQLite, et d’effectuer diverses opérations sur ces données.
+
+-**Initialisation**: L’instance de la classe FromageETL est initialisée avec une URL à partir de laquelle les données sur les fromages seront extraites.
+
+-**Extraction des Donnée**s: Les données sont extraites à partir de l’URL spécifiée et stockées dans self.data.
+
+-**Transformation des Données**: Les données extraites sont transformées en un DataFrame pandas structuré. Le processus implique l’analyse HTML des données, la récupération des informations sur les fromages à partir de la table HTML, et la création d’un DataFrame avec les colonnes ‘fromage_names’, ‘fromage_familles’, ‘pates’, et ‘creation_date’.
+
+-**Chargement des Données**: Les données sont chargées dans une table SQLite spécifiée. Il faut fournir le nom de la base de données SQLite et le nom de la table dans laquelle charger les données.
 
 ### Utilisation
-1. Exécutez dans un IDE, avec une installation Python, le run du programme.
-2. Une fenêtre de calculatrice graphique s'ouvrira.
-3. Utilisez les boutons "↑" et "↓" pour faire défiler les caractères.
-4. Appuyez sur le bouton "Valider" pour confirmer chaque choix de caractère.
-5. Explorez les fonctionnalités de la calculatrice et redémarrez l'application au besoin.
+1. Importez la classe FromageETL depuis le module scrapping_fromage.py.
+2. Créez une instance de la classe FromageETL avec l’URL de votre choix.
+3. Utilisez la méthode extract pour extraire les données.
+4. Utilisez la méthode transform pour transformer les données extraites en un DataFrame structuré.
+5. Utilisez la méthode load pour charger les données dans une base de données SQLite.
 
-### Ensemble de calculs possible
-- Addition simple avec des Int
-- Addition avec des Float
-- Soustraction simple(Int & Float)
-- Multiplication (Int & Float)
-- Division (Int & Float)
-- Division Euclidienne (Int & Float)
-- Puissance (Int & Float)
-- Modulo (Int & Float)
-- Calcul complex (Int, Float & Nombreux opérateurs)
+### Ensemble des fonctionnalités tests
+
+- **Lecture de la Base de Données**: La méthode read_from_database permet de lire les données d’une table spécifique dans une base de données SQLite.
+
+- **Obtention des Noms de Fromages**: La méthode get_fromage_names permet d’obtenir les noms de fromages d’une table spécifique dans une base de données SQLite.
+
+- **Obtention des Familles de Fromages**: La méthode get_fromage_familles permet d’obtenir les familles de fromages d’une table spécifique dans une base de données SQLite.
+
+- **Obtention des Pâtes de Fromages**: La méthode get_pates permet d’obtenir les types de pâtes de fromages d’une table spécifique dans une base de données SQLite.
+
+- **Connexion à la Base de Données**: La méthode connect_to_database permet de se connecter à une base de données SQLite.
+
+- **Ajout d’une Ligne**: La méthode add_row permet d’ajouter une nouvelle ligne de données au DataFrame.
+
+- **Tri Ascendant**: La méthode sort_ascending permet de trier les données du DataFrame par ordre croissant de noms de fromages.
+
+- **Tri Descendant**: La méthode sort_descending permet de trier les données du DataFrame par ordre décroissant de noms de fromages.
+
+- **Compte Total**: La méthode total_count permet de compter le nombre total de lignes dans le DataFrame.
+  
+- **Comptage par Lettre**: La méthode count_by_letter compte le nombre de fromages par lettre initiale dans les noms.
+
+- **Mise à Jour du Nom d’un Fromage**: La méthode update_fromage_name met à jour le nom d’un fromage dans l’ensemble de données.
+
+- **Suppression d’une Ligne**: La méthode delete_row supprime une ligne de l’ensemble de données basée sur le nom du fromage.
+
+- **Regroupement et Comptage par Première Lettre**: La méthode group_and_count_by_first_letter regroupe les fromages par la première lettre de la famille et compte le nombre de fromages par groupe.
 
 ### Particularités
-La calculatrice à 3 boutons présente plusieurs particularités pour améliorer l'expérience utilisateur :
 
-#### Redémarrage de l'Application
+#### Souplesse d’Utilisationn
 
-À tout moment, l'utilisateur peut choisir de redémarrer l'application en appuyant sur le caractère "R" puis en appuyant sur "valider".<br>
-Cela permet de commencer une nouvelle séquence d'opérations sans quitter l'application.
+La classe FromageETL est flexible et peut être utilisée pour extraire, transformer et charger des données depuis n’importe quelle URL contenant des informations sur les fromages.
 
-#### Gestion de la Division par Zéro
+#### Adaptabilité
 
-La calculatrice intègre une protection contre la division par zéro. Si une division par zéro est détectée lors de l'évaluation de l'expression, un message d'erreur est affiché à l'utilisateur.<br>
-La calculatrice doit ensuite etre réinitialisée avec le "redémarrer l'application" pour éviter toute incohérence.
+La classe FromageETL est adaptable et peut être modifiée pour extraire, transformer et charger des données depuis d’autres sources ou pour traiter d’autres types de données.
 
-#### Désactivation du Clavier
+#### Indépendance
 
-Pour promouvoir une expérience utilisateur centrée sur la souris, l'utilisation du clavier est désactivée pendant l'exécution du programme.<br> 
-Cela garantit que l'utilisateur interagit exclusivement avec l'interface graphique de la calculatrice à l'aide de la souris.
+La classe FromageETL est indépendante et ne dépend pas d’autres modules ou classes pour fonctionner correctement. Elle utilise uniquement les modules importés dans scrapping_fromage.py.
+
+# Test de Scrapping de Fromages <a name="test_scrapping_fromages.py"></a>
+Ce script Python, `test_scrapping_fromage.py`, propose une suite de tests pour vérifier les fonctionnalités de la classe `FromageETL` du script `scrapping_fromage.py`. Voici un résumé des tests effectués dans ce script.
+
+### Tests
+- **Instance ETL**: Le test `etl_instance` crée une instance de la classe `FromageETL` avec une URL spécifique.
+
+- **Extraction des Données**: Le test `test_extract` vérifie que la méthode `extract` extrait correctement les données à partir de l'URL spécifiée.
+
+- **Transformation des Données**: Le test `test_transform` vérifie que la méthode `transform` transforme correctement les données extraites en un DataFrame structuré.
+
+- **Chargement et Lecture de la Base de Données**: Le test `test_load_and_read_from_database` vérifie que la méthode `load` charge correctement les données dans la base de données et que la méthode `read_from_database` lit correctement les données depuis la base de données.
+
+- **Obtention des Noms de Fromages**: Le test `test_get_fromage_names` vérifie que la méthode `get_fromage_names` obtient correctement les noms de fromages d'une table spécifique dans une base de données SQLite.
+
+- **Obtention des Familles de Fromages**: Le test `test_get_fromage_familles` vérifie que la méthode `get_fromage_familles` obtient correctement les familles de fromages d'une table spécifique dans une base de données SQLite.
+
+- **Connexion à la Base de Données**: Le test `test_connect_to_database` vérifie que la méthode `connect_to_database` se connecte correctement à une base de données SQLite.
+
+- **Ajout d’une Ligne**: Le test `test_add_row` vérifie que la méthode `add_row` ajoute correctement une nouvelle ligne de données au DataFrame.
+
+- **Tri Ascendant**: Le test `test_sort_ascending` vérifie que la méthode `sort_ascending` trie correctement les données du DataFrame par ordre croissant de noms de fromages.
+
+- **Tri Descendant**: Le test `test_sort_descending` vérifie que la méthode `sort_descending` trie correctement les données du DataFrame par ordre décroissant de noms de fromages.
+
+- **Compte Total**: Le test `test_total_count` vérifie que la méthode `total_count` compte correctement le nombre total de lignes dans le DataFrame.
+
+- **Comptage par Lettre**: Le test `test_count_by_letter` vérifie que la méthode `count_by_letter` compte correctement le nombre de fromages par lettre initiale dans les noms.
+
+- **Suppression d’une Ligne**: Le test `test_delete_row` vérifie que la méthode `delete_row` supprime correctement une ligne de l'ensemble de données basée sur le nom du fromage.
+
+- **Mise à Jour du Nom d’un Fromage**: Le test `test_update_fromage_name` vérifie que la méthode `update_fromage_name` met à jour correctement le nom d'un fromage dans l'ensemble de données.
+
+- **Regroupement et Comptage par Première Lettre**: Le test `test_group_and_count_by_first_letter` vérifie que la méthode `group_and_count_by_first_letter` renvoie un DataFrame non vide avec les colonnes 'fromage_familles' et 'fromage_nb'.
+
+### Utilisation
+1. Importez le module `test_scrapping_fromage.py`.
+2. Exécutez le script pour lancer la suite de tests.
+3. Les résultats des tests seront affichés dans la console.
+
+
+### Utilisation
+1. Importez le module `test_scrapping_fromage.py`.
+2. Exécutez le script pour lancer la suite de tests.
+3. Les résultats des tests seront affichés dans la console.
+
+### Particularités
+- **Tests Indépendants**: Chaque test est conçu pour être indépendant des autres. Cela signifie que l'échec d'un test n'affecte pas l'exécution des autres tests.
+
+- **Utilisation de Mocks**: Pour certains tests, des mocks sont utilisés pour simuler le comportement de certaines fonctions ou méthodes. Cela permet de tester les fonctionnalités de la classe `FromageETL` sans dépendre de sources de données externes.
+
+- **Tests Compréhensifs**: La suite de tests couvre toutes les principales fonctionnalités de la classe `FromageETL`, assurant ainsi que chaque fonctionnalité fonctionne comme prévu.
