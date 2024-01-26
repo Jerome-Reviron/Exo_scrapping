@@ -1,8 +1,13 @@
-# fromage_ui.py
+"""
+Module d'interface utilisateur pour afficher des informations sur les fromages à l'aide de Tkinter.
+"""
 from imports import tk, messagebox, Figure, FigureCanvasTkAgg
 from scrapping_fromage import FromageETL
 
 class FromageUI:
+    """
+    Classe représentant l'interface utilisateur pour afficher des informations sur les fromages.
+    """
     def __init__(self, master):
         self.master = master
         master.title("Interface Fromage")
