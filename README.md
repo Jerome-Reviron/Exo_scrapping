@@ -8,7 +8,7 @@
 - [Licence](#licence)
 - [Scrapping de Fromages à partir d'une Url](#scrapping_fromage.py)
 - [Test_scrapping de Fromages](#test_scrapping_fromages.py)
-- [Interface fromage_UI](#interface_fromage_UI.py)
+- [Interface fromage_UI](#interface_fromage.py)
 
 ## Introduction <a name="introduction"></a>
 Ce répertoire est conçu durant ma formation POEI Développeur Applicatif Python, afin d'intégrer l'entreprise Pharma Pilot à Cournond'Auvergne.<br>
@@ -186,7 +186,7 @@ Pour certains tests, des mocks sont utilisés pour simuler le comportement de ce
 - **Tests Compréhensifs**:<br>
 La suite de tests couvre toutes les principales fonctionnalités de la classe `FromageETL`, assurant ainsi que chaque fonctionnalité fonctionne comme prévu.
 
-# Interface fromage_UI <a name="interface_fromage_UI.py"></a>
+# Interface fromage_UI <a name="interface_fromage.py"></a>
 Ce script Python, `fromage_ui.py`, propose une interface utilisateur pour afficher des informations sur les fromages. Voici un résumé des fonctionnalités de ce script.
 
 ### Fonctionnalités
