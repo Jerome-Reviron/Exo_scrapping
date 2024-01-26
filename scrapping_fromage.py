@@ -1,17 +1,8 @@
 """
 Ce module contient les importations nécessaires pour le script.
-
-- pandas (pd) : Bibliothèque pour la manipulation et l'analyse des données.
-- sqlite3 : Module pour accéder à la base de données SQLite.
-- urlopen : Fonction pour ouvrir des connexions à des URL et récupérer les données.
-- BeautifulSoup : Classe pour extraire des informations à partir de documents HTML et XML.
-- datetime : Classe pour travailler avec des objets de date et d'heure.
 """
-import sqlite3
-from urllib.request import urlopen
-from bs4 import BeautifulSoup
-import pandas as pd
-from datetime import datetime
+# scrapping_fromage.py
+from imports import sqlite3, urlopen, BeautifulSoup, pd, datetime
 
 class FromageETL:
     """
@@ -94,6 +85,7 @@ class FromageETL:
         con = sqlite3.connect(database_name)
         self.data.to_sql(table_name, con, if_exists="replace", index=False)
         con.close()
+        return self.data
 
     def read_from_database(self, database_name, table_name):
         """
@@ -243,7 +235,7 @@ class FromageETL:
         - table_name (str): Le nom de la table à interroger.
 
         Returns:
-        - pd.DataFrame: Un DataFrame contenant les colonnes 'lettre_alpha' et 'fromage_nb'.
+        - pd.DataFrame: Un DataFrame contenant les colonnes 'fromage_familles' et 'fromage_nb'.
         """
         # Utilisez la fonction get_fromage_familles pour récupérer les familles de fromages
         data_from_db = self.get_fromage_familles(database_name, table_name)
@@ -251,13 +243,8 @@ class FromageETL:
         # Créez une nouvelle colonne 'lettre_alpha' en prenant la première lettre de 'fromage_familles'
         data_from_db['lettre_alpha'] = data_from_db['fromage_familles'].str[0]
 
-        # Créez une nouvelle colonne 'lettre_alpha_full' avec le nom complet correspondant à la lettre
-        letter_mapping = data_from_db.groupby('lettre_alpha')['fromage_familles'].first().reset_index()
-        data_from_db = pd.merge(data_from_db, letter_mapping, on='lettre_alpha', how='left')
-        data_from_db.rename(columns={'fromage_familles_y': 'lettre_alpha_full'}, inplace=True)
-
-        # Utilisez groupby pour regrouper par 'lettre_alpha' et compter le nombre de fromages dans chaque groupe
-        grouped_data = data_from_db.groupby('lettre_alpha_full').size().reset_index(name='fromage_nb')
+        # Utilisez groupby pour regrouper par 'fromage_familles' et compter le nombre de fromages dans chaque groupe
+        grouped_data = data_from_db.groupby('fromage_familles').size().reset_index(name='fromage_nb')
 
         return grouped_data
 

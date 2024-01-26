@@ -13,14 +13,11 @@ Usage:
 - Exécutez le script en utilisant pytest pour exécuter tous les tests définis dans ce module.
 
 Exemple:
-    $ pytest test_scrapping_fromages.py
+    pytest -s test_scrapping_fromages.py
 """
-
-import sqlite3
-import pytest
-from unittest.mock import patch, Mock
+# test_scrapping_fromages.py
+from imports import sqlite3, pytest, patch, Mock, pd
 from scrapping_fromage import FromageETL
-import pandas as pd
 
 @pytest.fixture
 def etl_instance():
@@ -230,7 +227,7 @@ def test_group_and_count_by_first_letter(etl_instance, tmp_path):
     """
     Test unitaire pour la méthode group_and_count_by_first_letter de la classe FromageETL.
 
-    Assure que la méthode renvoie un DataFrame non vide avec les colonnes 'lettre_alpha_full' et 'fromage_nb'.
+    Assure que la méthode renvoie un DataFrame non vide avec les colonnes 'fromage_familles' et 'fromage_nb'.
     """
     # Extract et transform avant d'accéder à etl_instance.data
     etl_instance.extract()
@@ -244,8 +241,8 @@ def test_group_and_count_by_first_letter(etl_instance, tmp_path):
     # Vérification du résultat est un DataFrame
     assert isinstance(result, pd.DataFrame)
 
-    # Vérification des colonnes 'lettre_alpha_full' et 'fromage_nb' présentes dans le DataFrame résultat
-    assert 'lettre_alpha_full' in result.columns
+    # Vérification des colonnes 'fromage_familles' et 'fromage_nb' présentes dans le DataFrame résultat
+    assert 'fromage_familles' in result.columns
     assert 'fromage_nb' in result.columns
 
     # Vérification que DataFrame résultat n'est pas vide
@@ -254,36 +251,6 @@ def test_group_and_count_by_first_letter(etl_instance, tmp_path):
     # Résultat dans le terminal
     print("Résultat du test_group_and_count_by_first_letter:")
     print(result)
-
-    def test_name_bis(etl_instance, tmp_path):
-        """
-        Test unitaire pour la méthode name_bis de la classe FromageETL.
-
-        Assure que la méthode renvoie un DataFrame non vide avec les colonnes 'fromage_familles', 'lettre_alpha', et 'lettre_alpha_full'.
-        """
-        # Extract et transform avant d'accéder à etl_instance.data
-        etl_instance.extract()
-        etl_instance.transform()
-        # Chargement des données dans la base de données
-        etl_instance.load(tmp_path / "fromages_bdd.sqlite", "fromages_table")
-
-        # Appel de la nouvelle fonction pour obtenir le résultat
-        result = etl_instance.name_bis(tmp_path / "fromages_bdd.sqlite", "fromages_table")
-
-        # Vérification du résultat est un DataFrame
-        assert isinstance(result, pd.DataFrame)
-
-        # Vérification des colonnes 'fromage_familles', 'lettre_alpha', et 'lettre_alpha_full' présentes dans le DataFrame résultat
-        assert 'fromage_familles' in result.columns
-        assert 'lettre_alpha' in result.columns
-        assert 'lettre_alpha_full' in result.columns
-
-        # Vérification que DataFrame résultat n'est pas vide
-        assert not result.empty
-
-        # Résultat dans le terminal
-        print("Résultat du test_name_bis:")
-        print(result)
 
 if __name__ == '__main__':
     pytest.main()
