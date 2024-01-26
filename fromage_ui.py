@@ -9,11 +9,26 @@ class FromageUI:
     Classe représentant l'interface utilisateur pour afficher des informations sur les fromages.
     """
     def __init__(self, master):
+        """
+        Initialisation de l'interface graphique de la classe FromageUI.
+
+        Parameters:
+        - master (Tk): Fenêtre principale de l'application.
+
+        Cette méthode crée une interface utilisateur pour la gestion des fromages,
+        comprenant un bouton pour mettre à jourla base de données (BDD),
+        et un diagramme en camembert pour afficher visuellement,
+        les informations sur les fromages.
+
+        Usage:
+        fromage_ui = FromageUI(master)
+        """
         self.master = master
         master.title("Interface Fromage")
 
         # Bouton pour mettre à jour la BDD
-        self.update_button = tk.Button(master, text="Mettre à jour la BDD", command=self.update_database)
+        self.update_button = tk.Button(master, text="Mettre à jour la BDD",
+            command=self.update_database)
         self.update_button.pack()
 
         # Diagramme en camembert
@@ -22,6 +37,20 @@ class FromageUI:
         self.canvas.get_tk_widget().pack()
 
     def update_database(self):
+        """
+        Met à jour la base de données (BDD) en extrayant,
+        transformant et chargeant les données des fromages.
+
+        Cette méthode utilise la classe FromageETL pour
+        extraire les données depuis une source en ligne, 
+        les transformer en un format approprié, 
+        et les charger dans une base de données SQLite. 
+        Elle affiche ensuite une boîte de dialogue
+        informant l'utilisateur du succès de la mise à jour.
+
+        Usage:
+        fromage_ui.update_database()
+        """
         # Appeler la méthode d'ETL pour mettre à jour la BDD
         etl = FromageETL(url="https://www.laboitedufromager.com/liste-des-fromages-par-ordre-alphabetique/")
         etl.extract()
@@ -33,6 +62,23 @@ class FromageUI:
         self.update_pie_chart(data)
 
     def update_pie_chart(self, data):
+        """
+        Met à jour le diagramme en camembert 
+        avec les ratios de fromages par famille.
+
+        Cette méthode prend un DataFrame de données
+        sur les fromages en paramètre, 
+        calcule le ratio de chaque famille de fromages, 
+        groupe les familles dont le ratio est inférieur à 5%
+        sous la catégorie "Autres", 
+        et met à jour le diagramme en camembert en conséquence.
+
+        Args:
+            data (pd.DataFrame): Le DataFrame contenant les données.
+
+        Usage:
+        fromage_ui.update_pie_chart(data)
+        """
         # Calculer le ratio de fromage par famille
         ratio = data['fromage_familles'].value_counts(normalize=True) * 100
 
