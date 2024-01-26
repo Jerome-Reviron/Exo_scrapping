@@ -187,7 +187,6 @@ Pour certains tests, des mocks sont utilisés pour simuler le comportement de ce
 La suite de tests couvre toutes les principales fonctionnalités de la classe `FromageETL`, assurant ainsi que chaque fonctionnalité fonctionne comme prévu.
 
 # Interface fromage_UI <a name="fromage_UI.py"></a>
-
 Ce script Python, `fromage_ui.py`, propose une interface utilisateur pour afficher des informations sur les fromages. Voici un résumé des fonctionnalités de ce script.
 
 ### Fonctionnalités
