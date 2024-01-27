@@ -51,8 +51,8 @@ class FromageETL:
 
         for row in cheese_dish.find_all('tr'):
             columns = row.find_all('td')
-            
-            if(columns[0].text.strip() == "Fromage"):
+
+            if columns[0].text.strip() == "Fromage":
                 continue
 
             if columns:
@@ -228,7 +228,8 @@ class FromageETL:
 
     def group_and_count_by_first_letter(self, database_name, table_name):
         """
-        Regroupe les fromages par la première lettre de la famille et compte le nombre de fromages par groupe.
+        Regroupe les fromages par la première lettre de la famille,
+        et compte le nombre de fromages par groupe.
 
         Parameters:
         - database_name (str): Le nom de la base de données SQLite.
@@ -240,7 +241,7 @@ class FromageETL:
         # Utilisez la fonction get_fromage_familles pour récupérer les familles de fromages
         data_from_db = self.get_fromage_familles(database_name, table_name)
 
-        # Créez une nouvelle colonne 'lettre_alpha' en prenant la première lettre de 'fromage_familles'
+        # Créez une nouvelle colonne 'lettre_alpha'
         data_from_db['lettre_alpha'] = data_from_db['fromage_familles'].str[0]
 
         # Utilisez groupby pour regrouper par 'fromage_familles' et compter le nombre de fromages dans chaque groupe

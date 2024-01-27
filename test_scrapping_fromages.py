@@ -16,11 +16,11 @@ Exemple:
     pytest -s test_scrapping_fromages.py
 """
 # test_scrapping_fromages.py
-from imports import sqlite3, pytest, patch, Mock, pd
+from imports import pytest, patch, pd
 from scrapping_fromage import FromageETL
 
-@pytest.fixture
-def etl_instance():
+@pytest.fixture(name="etl_instance")
+def etl_instance_fixture():
     """
     Fixture pour créer une instance de FromageETL pour les tests unitaires.
 
@@ -87,7 +87,8 @@ def test_get_fromage_names(etl_instance):
     """
     Test unitaire pour la méthode get_fromage_names de la classe FromageETL.
 
-    Charge les données dans une table SQLite spécifiée et assure que la méthode renvoie les noms de fromages corrects.
+    Charge les données dans une table SQLite spécifiée 
+    et assure que la méthode renvoie les noms de fromages corrects.
     """
     # Appelez extract et transform avant d'accéder à etl_instance.data
     etl_instance.extract()
@@ -97,13 +98,15 @@ def test_get_fromage_names(etl_instance):
 
     # Assurez-vous que la méthode renvoie les noms de fromages corrects
     expected_names = etl_instance.data['fromage_names'].values.tolist()
-    assert etl_instance.get_fromage_names('fromages_bdd.sqlite', 'fromages_table')['fromage_names'].values.tolist() == expected_names
+    assert etl_instance.get_fromage_names('fromages_bdd.sqlite',
+        'fromages_table')['fromage_names'].values.tolist() == expected_names
 
 def test_get_fromage_familles(etl_instance):
     """
     Test unitaire pour la méthode get_fromage_familles de la classe FromageETL.
 
-    Charge les données dans une table SQLite spécifiée et assure que la méthode renvoie les familles de fromages correctes.
+    Charge les données dans une table SQLite spécifiée
+    et assure que la méthode renvoie les familles de fromages correctes.
     """
     # Appelez extract et transform avant d'accéder à etl_instance.data
     etl_instance.extract()
@@ -113,13 +116,15 @@ def test_get_fromage_familles(etl_instance):
 
     # Assurez-vous que la méthode renvoie les familles de fromages correctes
     expected_familles = etl_instance.data['fromage_familles'].values.tolist()
-    assert etl_instance.get_fromage_familles('fromages_bdd.sqlite', 'fromages_table')['fromage_familles'].values.tolist() == expected_familles
+    assert etl_instance.get_fromage_familles('fromages_bdd.sqlite',
+        'fromages_table')['fromage_familles'].values.tolist() == expected_familles
 
 def test_get_pates(etl_instance):
     """
     Test unitaire pour la méthode get_pates de la classe FromageETL.
 
-    Charge les données dans une table SQLite spécifiée et assure que la méthode renvoie les pâtes de fromages correctes.
+    Charge les données dans une table SQLite spécifiée
+    et assure que la méthode renvoie les pâtes de fromages correctes.
     """
     # Appelez extract et transform avant d'accéder à etl_instance.data
     etl_instance.extract()
@@ -129,7 +134,8 @@ def test_get_pates(etl_instance):
 
     # Assurez-vous que la méthode renvoie les pâtes de fromages correctes
     expected_pates = etl_instance.data['pates'].values.tolist()
-    assert etl_instance.get_pates('fromages_bdd.sqlite', 'fromages_table')['pates'].values.tolist() == expected_pates
+    assert etl_instance.get_pates('fromages_bdd.sqlite',
+        'fromages_table')['pates'].values.tolist() == expected_pates
 
 def test_connect_to_database(etl_instance):
     """
@@ -202,7 +208,8 @@ def test_delete_row(etl_instance):
     """
     Test unitaire pour la méthode delete_row de la classe FromageETL.
 
-    Assure que la méthode supprime correctement une ligne des données, et la longueur des données diminue d'un.
+    Assure que la méthode supprime correctement une ligne des données,
+    et la longueur des données diminue d'un.
     """
     etl_instance.extract()
     etl_instance.transform()
@@ -227,7 +234,8 @@ def test_group_and_count_by_first_letter(etl_instance, tmp_path):
     """
     Test unitaire pour la méthode group_and_count_by_first_letter de la classe FromageETL.
 
-    Assure que la méthode renvoie un DataFrame non vide avec les colonnes 'fromage_familles' et 'fromage_nb'.
+    Assure que la méthode renvoie un DataFrame non vide
+    avec les colonnes 'fromage_familles' et 'fromage_nb'.
     """
     # Extract et transform avant d'accéder à etl_instance.data
     etl_instance.extract()
@@ -235,13 +243,13 @@ def test_group_and_count_by_first_letter(etl_instance, tmp_path):
     # Chargement des données dans la base de données
     etl_instance.load(tmp_path / "fromages_bdd.sqlite", "fromages_table")
 
-    # Appel de la nouvelle fonction pour obtenir le résultat
+    # Appel de la fonction pour obtenir le résultat
     result = etl_instance.group_and_count_by_first_letter(tmp_path / "fromages_bdd.sqlite", "fromages_table")
 
     # Vérification du résultat est un DataFrame
     assert isinstance(result, pd.DataFrame)
 
-    # Vérification des colonnes 'fromage_familles' et 'fromage_nb' présentes dans le DataFrame résultat
+    # Vérification des colonnes 'fromage_familles' et 'fromage_nb'
     assert 'fromage_familles' in result.columns
     assert 'fromage_nb' in result.columns
 

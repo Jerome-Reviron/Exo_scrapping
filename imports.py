@@ -1,4 +1,6 @@
-# imports.py
+"""
+Ce module contient les importations nécessaires pour le script.
+"""
 import sqlite3
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
@@ -10,4 +12,3 @@ import tkinter as tk
 from tkinter import messagebox
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
