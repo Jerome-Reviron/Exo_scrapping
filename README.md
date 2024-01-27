@@ -33,7 +33,7 @@ Tout droit réservé à moi même, Monsieur Reviron Jérôme.
 Ce script Python, scrapping_fromage.py, propose une solution complète pour extraire, transformer et charger (ETL) des données sur les fromages à partir d'une source en ligne. Voici un résumé des fonctionnalités et des spécificités de ce script.<br>
 L'Url du site scrappé est : https://www.laboitedufromager.com/liste-des-fromages-par-ordre-alphabetique/.
 
-![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/scrapping_fromage.png))
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/scrapping_fromage.png)
 
 ### Fonctionnalités
 
@@ -120,9 +120,13 @@ La classe FromageETL est adaptable et peut être modifiée pour extraire, transf
 
 La classe FromageETL est indépendante et ne dépend pas d’autres modules ou classes pour fonctionner correctement. Elle utilise uniquement les modules importés dans scrapping_fromage.py.
 
+![Fromages_bdd.sqlite](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/fromage_bdd_table.png)
+
 # Test de Scrapping de Fromages <a name="test_scrapping_fromages.py"></a>
 
 Ce script Python, `test_scrapping_fromage.py`, propose une suite de tests pour vérifier les fonctionnalités de la classe `FromageETL` du script `scrapping_fromage.py`. Voici un résumé des tests effectués dans ce script.
+
+![Test_scrapping](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/test_scrapping.png)
 
 ### Tests
 
@@ -171,11 +175,15 @@ Le test `test_update_fromage_name` vérifie que la méthode `update_fromage_name
 - **Regroupement et Comptage par Première Lettre**:<br>
 Le test `test_group_and_count_by_first_letter` vérifie que la méthode `group_and_count_by_first_letter` renvoie un DataFrame non vide avec les colonnes 'fromage_familles' et 'fromage_nb'.
 
+![Groupby_fromage](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/groupby_fromage.png)
+
 ### Utilisation
 
 1. Importez le module `test_scrapping_fromage.py`.
 2. Exécutez le script pour lancer la suite de tests.
 3. Les résultats des tests seront affichés dans la console.
+
+![Rapport_xlsx_scrapping](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/rapport_xlsx_scrapping.png)
 
 ### Particularités
 
@@ -187,6 +195,8 @@ Pour certains tests, des mocks sont utilisés pour simuler le comportement de ce
 
 - **Tests Compréhensifs**:<br>
 La suite de tests couvre toutes les principales fonctionnalités de la classe `FromageETL`, assurant ainsi que chaque fonctionnalité fonctionne comme prévu.
+
+![Analyze_tes](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/rapport_test.png)
 
 # Interface fromage_UI <a name="interface_fromage.py"></a>
 Ce script Python, `fromage_ui.py`, propose une interface utilisateur pour afficher des informations sur les fromages. Voici un résumé des fonctionnalités de ce script.
