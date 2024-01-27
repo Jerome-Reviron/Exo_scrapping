@@ -33,6 +33,8 @@ Tout droit réservé à moi même, Monsieur Reviron Jérôme.
 Ce script Python, scrapping_fromage.py, propose une solution complète pour extraire, transformer et charger (ETL) des données sur les fromages à partir d'une source en ligne. Voici un résumé des fonctionnalités et des spécificités de ce script.<br>
 L'Url du site scrappé est : https://www.laboitedufromager.com/liste-des-fromages-par-ordre-alphabetique/.
 
+![Tableau du résultat]([https://github.com/logos/github-logo.png](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/scrapping_fromage.png))
+
 ### Fonctionnalités
 
 -**Extraction, Transformation et Chargement des Données**:<br>
