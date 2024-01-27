@@ -1,3 +1,6 @@
+"""
+Ce module contient les importations nécessaires pour le script.
+"""
 from imports import tk, messagebox, Figure, FigureCanvasTkAgg
 from scrapping_fromage import FromageETL
 
@@ -24,7 +27,8 @@ class FromageUI:
         self.main_frame.pack()
 
         # Bouton pour mettre à jour la BDD
-        self.update_button = tk.Button(self.main_frame, text="Mettre à jour la BDD", command=self.update_database)
+        self.update_button = tk.Button(self.main_frame,
+            text="Mettre à jour la BDD", command=self.update_database)
         self.update_button.pack()
 
         # Diagramme en camembert
@@ -38,7 +42,8 @@ class FromageUI:
 
     def update_database(self):
         """
-        Met à jour la base de données (BDD) en extrayant, transformant et chargeant les données des fromages.
+        Met à jour la base de données (BDD) en extrayant,
+        transformant et chargeant les données des fromages.
         """
         etl = FromageETL(url=self.URL_FROMAGE)
         etl.extract()
@@ -84,7 +89,7 @@ class FromageUI:
         # Créer un deuxième diagramme en camembert pour "Autres"
         if 'Autres' in ratio:
             other_data = data['fromage_familles'].value_counts(normalize=True)[mask] * 100
-            ax2 = self.fig.add_axes([0.55, 0, 0.3, 1]) 
+            ax2 = self.fig.add_axes([0.55, 0, 0.3, 1])
             ax2.pie(other_data, labels=other_data.index, autopct='%1.1f%%')
             ax2.set_title("100% des Autres", loc='center', pad=40)
 
@@ -95,7 +100,7 @@ class FromageUI:
             # Ajuster la position de la légende
             legend2.set_bbox_to_anchor((0.8, 0.80))
             legend2.get_title().set_fontsize('10')
-            
+
             # Ajuster la taille des étiquettes
             for text in legend2.get_texts():
                 text.set_fontsize('8')
@@ -103,10 +108,10 @@ class FromageUI:
         self.canvas.draw()
 
     def close_window(self):
-            """
-            Fonction pour fermer la fenêtre.
-            """
-            self.master.destroy()
+        """
+        Fonction pour fermer la fenêtre.
+        """
+        self.master.destroy()
 
 if __name__ == "__main__":
     root = tk.Tk()
