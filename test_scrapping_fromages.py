@@ -5,7 +5,7 @@ Ce module contient des tests unitaires pour la classe FromageETL du script scrap
 Les tests sont écrits en utilisant le framework de test pytest.
 
 Avertissement:
-- Ce module nécessite l'installation de pandas, sqlite3 et pytest.
+- Ce module nécessite l'installation de pandas et pytest.
 - Certains tests utilisent la fonction patch du module unittest.mock
 pour simuler le comportement de certaines fonctions.
 
