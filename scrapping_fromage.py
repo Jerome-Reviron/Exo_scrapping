@@ -1,7 +1,6 @@
 """
 Ce module contient les importations nécessaires pour le script.
 """
-# scrapping_fromage.py
 from imports import sqlite3, urlopen, BeautifulSoup, pd, datetime
 
 class FromageETL:
