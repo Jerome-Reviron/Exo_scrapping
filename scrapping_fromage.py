@@ -32,6 +32,125 @@ class FromageETL:
         data = urlopen(self.url)
         self.data = data.read()
 
+    def extract_description(self, url):
+        """
+        Extrait la description d'une page web spécifique.
+
+        Parameters:
+        - url (str): L'URL de la page web à partir de laquelle la description sera extraite.
+
+        Returns:
+        - description (str): La description extraite.
+        """
+        try:
+            # Ouvrir l'URL et lire le contenu HTML
+            data = urlopen(url)
+            html_content = data.read()
+        except Exception as e:
+            print(f"Erreur lors de l'ouverture de l'URL {url} : {e}")
+            return ""
+
+        # Utiliser BeautifulSoup pour analyser le contenu HTML
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        # Trouver l'élément <div> avec la classe "woocommerce-product-details__short-description"
+        description_div = soup.find('div', {'class': 'woocommerce-product-details__short-description'})
+
+        # Initialiser une liste vide pour stocker les paragraphes de la description
+        description_paragraphs = []
+
+        # Vérifier si l'élément <div> a été trouvé
+        if description_div:
+            # Trouver tous les éléments <p> dans le <div>
+            p_elements = description_div.find_all('p')
+
+            # Parcourir tous les éléments <p> trouvés
+            for p in p_elements:
+                # Vérifier si le texte de l'élément <p> n'est pas vide
+                if p.text.strip() != '':
+                    # Ajouter le texte de l'élément <p> à la liste des paragraphes de la description
+                    description_paragraphs.append(p.text.strip())
+        else:
+            print(f"Aucun élément <div> trouvé dans l'URL {url}")
+
+        # Joindre tous les paragraphes de la description en une seule chaîne de caractères
+        description = ' '.join(description_paragraphs)
+
+        return description
+
+    def extract_rating_and_reviews(self, url):
+        """
+        Extrait la note moyenne et le nombre d'avis d'une page web spécifique.
+
+        Parameters:
+        - url (str): L'URL de la page web à partir de laquelle les informations seront extraites.
+
+        Returns:
+        - note_moyenne (float): La note moyenne du fromage.
+        - nb_avis (int): Le nombre d'avis sur le fromage.
+        """
+        # Ouvrir l'URL et lire le contenu HTML
+        data = urlopen(url)
+        html_content = data.read()
+
+        # Utiliser BeautifulSoup pour analyser le contenu HTML
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        # Trouver l'élément <div> avec la classe "star-rating"
+        rating_div = soup.find('div', {'class': 'star-rating'})
+
+        # Initialiser la note moyenne et le nombre d'avis comme None
+        note_moyenne = None
+        nb_avis = None
+
+        # Vérifier si l'élément <div> a été trouvé
+        if rating_div:
+            # Trouver l'élément <strong> avec la classe "rating" pour la note moyenne
+            rating_strong = rating_div.find('strong', {'class': 'rating'})
+            if rating_strong:
+                note_moyenne = float(rating_strong.text.strip())
+
+            # Trouver l'élément <span> avec la classe "rating" pour le nombre d'avis
+            rating_span = rating_div.find('span', {'class': 'rating'})
+            if rating_span:
+                nb_avis = int(rating_span.text.strip())
+
+        return note_moyenne, nb_avis
+
+    def extract_price(self, url):
+        """
+        Extrait le prix d'une page web spécifique.
+
+        Parameters:
+        - url (str): L'URL de la page web à partir de laquelle les informations seront extraites.
+
+        Returns:
+        - prix (float): Le prix du fromage.
+        """
+        # Ouvrir l'URL et lire le contenu HTML
+        data = urlopen(url)
+        html_content = data.read()
+
+        # Utiliser BeautifulSoup pour analyser le contenu HTML
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        # Trouver l'élément <bdi>
+        price_bdi = soup.find('bdi')
+
+        # Initialiser le prix comme None
+        prix = None
+
+        # Vérifier si l'élément <bdi> a été trouvé
+        if price_bdi:
+            # Extraire le texte de l'élément <bdi> et le convertir en float
+            prix_text = price_bdi.text.strip()
+            # Supprimer le symbole € et le caractère non-breaking space ( )
+            prix_text = prix_text.replace('€', '').replace('\xa0', '')
+            # Convertir le texte en float
+            prix = float(prix_text)
+
+        return prix
+
     def transform(self):
         """
         Transforme les données extraites en un DataFrame pandas structuré.
@@ -39,7 +158,7 @@ class FromageETL:
         Le processus implique l'analyse HTML des données,
         la récupération des informations sur les fromages
         à partir de la table HTML, et la création d'un DataFrame avec les colonnes 'fromage_names', 
-        'fromage_familles', 'pates', et 'creation_date'.
+        'fromage_familles', 'pates', 'url_info_fromage', et 'creation_date'.
         """
         soup = BeautifulSoup(self.data, 'html.parser')
         cheese_dish = soup.find('table')
@@ -47,6 +166,11 @@ class FromageETL:
         fromage_names = []
         fromage_familles = []
         pates = []
+        url_info_fromages = []
+        descriptions = []
+        note_moyennes = []
+        nb_aviss = []
+        prixs = []
 
         for row in cheese_dish.find_all('tr'):
             columns = row.find_all('td')
@@ -59,19 +183,49 @@ class FromageETL:
                 fromage_famille = columns[1].text.strip()
                 pate = columns[2].text.strip()
 
+                # Chercher le lien dans la même cellule que "fromage_name"
+                link = columns[0].find('a')
+                url_info_fromage = "https://www.laboitedufromager.com" + link['href'] if link else ""
+
+                # Initialiser la description, la note moyenne et le nombre d'avis comme une chaîne vide
+                description = ""
+                note_moyenne = None
+                nb_avis = None
+                prix = None
+
+                # Vérifier si l'URL est présente
+                if url_info_fromage:
+                    # Extraire depuis l'URL
+                    description = self.extract_description(url_info_fromage)
+                    note_moyenne, nb_avis = self.extract_rating_and_reviews(url_info_fromage)
+                    prix = self.extract_price(url_info_fromage)
+
                 # Ignore les lignes vides
                 if fromage_name != '' and fromage_famille != '' and pate != '':
                     fromage_names.append(fromage_name)
                     fromage_familles.append(fromage_famille)
                     pates.append(pate)
+                    url_info_fromages.append(url_info_fromage)
+                    descriptions.append(description)
+                    note_moyennes.append(note_moyenne)
+                    nb_aviss.append(nb_avis)
+                    prixs.append(prix)
+
+                print(f"Nombre de prixs: {len(prixs)}")
 
         self.data = pd.DataFrame({
             'fromage_names': fromage_names,
             'fromage_familles': fromage_familles,
-            'pates': pates
+            'pates': pates,
+            'url_info_fromages': url_info_fromages,
+            'descriptions': descriptions,
+            'note_moyenne': note_moyennes,
+            'nb_avis': nb_aviss,
+            'prix' : prixs
         })
-
         self.data['creation_date'] = datetime.now()
+
+        print(self.data)
 
     def load(self, database_name, table_name):
         """
