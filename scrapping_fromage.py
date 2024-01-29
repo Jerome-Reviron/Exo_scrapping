@@ -2,7 +2,6 @@
 Ce module contient les importations nécessaires pour le script.
 """
 from imports import sqlite3, urlopen, BeautifulSoup, pd, datetime
-from urllib.parse import urljoin
 
 class FromageETL:
     """
@@ -13,20 +12,17 @@ class FromageETL:
     
     Attributes :
     - url (str) : L'URL à partir de laquelle les données peuvent être extraites.
-    - base_url (str) : La partie fixe de l'URL pour les informations sur les fromages.
     - data (pd.DataFrame) : Un DataFrame pandas contenant les données sur les fromages.
     """
 
-    def __init__(self, url, init_base_url="https://www.laboitedufromager.com/"):
+    def __init__(self, url):
         """
         Initialise une instance de la classe FromageETL.
 
         Parameters:
         - url (str): L'URL à partir de laquelle les données sur les fromages seront extraites.
-        - init_base_url (str): La partie fixe de l'URL pour les informations sur les fromages.
         """
         self.url = url
-        self.base_url = init_base_url
         self.data = None
 
     def extract(self):
@@ -43,7 +39,7 @@ class FromageETL:
         Le processus implique l'analyse HTML des données,
         la récupération des informations sur les fromages
         à partir de la table HTML, et la création d'un DataFrame avec les colonnes 'fromage_names', 
-        'fromage_familles', 'pates', 'creation_date', et 'url_infos_fromage'.
+        'fromage_familles', 'pates', et 'creation_date'.
         """
         soup = BeautifulSoup(self.data, 'html.parser')
         cheese_dish = soup.find('table')
@@ -51,7 +47,6 @@ class FromageETL:
         fromage_names = []
         fromage_familles = []
         pates = []
-        url_infos_fromage = []  # Nouvelle liste pour stocker les URLs
 
         for row in cheese_dish.find_all('tr'):
             columns = row.find_all('td')
@@ -64,22 +59,16 @@ class FromageETL:
                 fromage_famille = columns[1].text.strip()
                 pate = columns[2].text.strip()
 
-                # Récupération de l'URL depuis le lien <a href>
-                link = columns[0].find('a')
-                url_infos = urljoin(self.base_url, link.get('href')) if link else ''
-
                 # Ignore les lignes vides
                 if fromage_name != '' and fromage_famille != '' and pate != '':
                     fromage_names.append(fromage_name)
                     fromage_familles.append(fromage_famille)
                     pates.append(pate)
-                    url_infos_fromage.append(url_infos)
 
         self.data = pd.DataFrame({
             'fromage_names': fromage_names,
             'fromage_familles': fromage_familles,
-            'pates': pates,
-            'url_infos_fromage': url_infos_fromage  # Nouvelle colonne
+            'pates': pates
         })
 
         self.data['creation_date'] = datetime.now()
@@ -96,7 +85,6 @@ class FromageETL:
         self.data.to_sql(table_name, con, if_exists="replace", index=False)
         con.close()
         return self.data
-
 
     def read_from_database(self, database_name, table_name):
         """
@@ -184,17 +172,10 @@ class FromageETL:
         - fromage_famille (str): Famille du fromage à ajouter.
         - pate (str): Type de pâte du fromage à ajouter.
         """
-        url_infos = urljoin(self.base_url, f"/fromage/{fromage_name.lower().replace(' ', '-')}/")
-
-        new_row = pd.DataFrame({
-            'fromage_names': [fromage_name],
-            'fromage_familles': [fromage_famille],
-            'pates': [pate],
-            'url_infos_fromage': [url_infos]  # Ajout de la colonne url_infos_fromage
-        })
-
+        new_row = pd.DataFrame({'fromage_names': [fromage_name],
+            'fromage_familles': [fromage_famille], 'pates': [pate]})
         self.data = pd.concat([self.data, new_row], ignore_index=True)
-        
+
     def sort_ascending(self):
         """
         Trie l'ensemble de données par ordre croissant des noms de fromages.
@@ -268,11 +249,8 @@ class FromageETL:
         return grouped_data
 
 # Utilisation de la classe
-base_url = 'https://www.laboitedufromager.com/'
-url_suffix = 'liste-des-fromages-par-ordre-alphabetique/'
-full_url = base_url + url_suffix
-
-fromage_etl = FromageETL(full_url, init_base_url=base_url)
+A = 'https://www.laboitedufromager.com/liste-des-fromages-par-ordre-alphabetique/'
+fromage_etl = FromageETL(A)
 fromage_etl.extract()
 fromage_etl.transform()
 fromage_etl.load('fromages_bdd.sqlite', 'fromages_table')
