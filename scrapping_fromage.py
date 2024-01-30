@@ -13,6 +13,7 @@ class FromageETL:
     Attributes :
     - url (str) : L'URL à partir de laquelle les données peuvent être extraites.
     - data (pd.DataFrame) : Un DataFrame pandas contenant les données sur les fromages.
+    - cache (dict) : Un dictionnaire utilisé pour stocker des données en cache.
     """
 
     def __init__(self, url):
@@ -23,6 +24,11 @@ class FromageETL:
     def get_url_content(self, url):
         """
         Récupère et met en cache le contenu d'une URL donnée.
+
+        Cette méthode prend une URL en paramètre, tente de récupérer son contenu
+        en utilisant la fonctionurlopen du module urllib, 
+        puis met le contenu en cache pour éviter de refaire la requête si
+        la même URL est à nouveau spécifiée.
 
         Args:
             url (str): L'URL dont on veut récupérer le contenu.
