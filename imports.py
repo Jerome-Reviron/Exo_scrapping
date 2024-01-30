@@ -16,6 +16,9 @@ import pandas as pd
 # Module pour travailler avec les dates et heures.
 from datetime import datetime
 
+# Module pour mesurer le temps d'exécution.
+import timeit
+
 # Framework de test pour Python.
 import pytest
 

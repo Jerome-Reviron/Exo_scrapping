@@ -1,7 +1,7 @@
 """
 Ce module contient les importations nécessaires pour le script.
 """
-from imports import sqlite3, urlopen, Request, urlretrieve, BeautifulSoup, pd, datetime, os
+from imports import sqlite3, urlopen, Request, urlretrieve, BeautifulSoup, pd, datetime, os, timeit
 
 class FromageETL:
     """
@@ -96,8 +96,8 @@ class FromageETL:
         # Utiliser BeautifulSoup pour analyser le contenu HTML
         soup = BeautifulSoup(html_content, 'html.parser')
 
-        # Trouver l'élément <div> avec la classe "star-rating"
-        rating_div = soup.find('div', {'class': 'star-rating'})
+        # Trouver l'élément <div> avec la classe "woocommerce-product-rating"
+        rating_div = soup.find('div', {'class': 'woocommerce-product-rating'})
 
         # Initialiser la note moyenne et le nombre d'avis comme None
         note_moyenne = None
@@ -134,20 +134,29 @@ class FromageETL:
         # Utiliser BeautifulSoup pour analyser le contenu HTML
         soup = BeautifulSoup(html_content, 'html.parser')
 
-        # Trouver l'élément <bdi>
-        price_bdi = soup.find('bdi')
+        # Trouver la balise parente <p class="price">
+        parent_tag = soup.find('p', class_='price')
 
         # Initialiser le prix comme None
         prix = None
 
-        # Vérifier si l'élément <bdi> a été trouvé
-        if price_bdi:
-            # Extraire le texte de l'élément <bdi> et le convertir en float
-            prix_text = price_bdi.text.strip()
-            # Supprimer le symbole € et le caractère non-breaking space ( )
-            prix_text = prix_text.replace('€', '').replace('\xa0', '')
-            # Convertir le texte en float
-            prix = float(prix_text)
+        # Vérifier si la balise parente a été trouvée
+        if parent_tag:
+            # Trouver l'élément <bdi> à l'intérieur de la balise parente
+            price_bdi = parent_tag.find('bdi')
+
+            # Vérifier si l'élément <bdi> a été trouvé
+            if price_bdi:
+                # Extraire le texte de l'élément <bdi> et le convertir en float
+                prix_text = price_bdi.text.strip()
+                # Supprimer le symbole € et le caractère non-breaking space ( )
+                prix_text = prix_text.replace('€', '').replace('\xa0', '')
+
+                try:
+                    # Convertir le texte en float
+                    prix = float(prix_text)
+                except ValueError as e:
+                    print(f"Erreur lors de la conversion du prix en float : {e}")
 
         return prix
 
@@ -291,7 +300,7 @@ class FromageETL:
             })
             self.data['creation_date'] = datetime.now()
 
-            print(self.data)
+            # print(self.data)
 
     def load(self, database_name, table_name):
         """
@@ -436,6 +445,8 @@ class FromageETL:
         """
         self.data.loc[self.data.fromage_names == old_name, 'fromage_names'] = new_name
 
+    import sqlite3
+
     def delete_row(self, fromage_name):
         """
         Supprime une ligne de l'ensemble de données basée sur le nom du fromage.
@@ -469,6 +480,7 @@ class FromageETL:
         return grouped_data
 
 # Utilisation de la classe
+start = timeit.default_timer()
 A = 'https://www.laboitedufromager.com/liste-des-fromages-par-ordre-alphabetique/'
 fromage_etl = FromageETL(A)
 fromage_etl.extract()
@@ -478,3 +490,93 @@ data_from_db_external = fromage_etl.read_from_database('fromages_bdd.sqlite', 'f
 
 # Afficher le DataFrame
 print(data_from_db_external)
+print(timeit.default_timer() - start)
+
+    # def count_filled_image_rows(database_path='fromages_bdd.sqlite'):
+    #     try:
+    #         # Connexion à la base de données
+    #         connection = sqlite3.connect(database_path)
+    #         cursor = connection.cursor()
+
+    #         # Exécution de la requête pour compter les lignes avec une valeur non nulle dans la colonne image_fromage
+    #         query = "SELECT COUNT(*) FROM fromages_table WHERE images_fromage IS NOT NULL"
+    #         cursor.execute(query)
+
+    #         # Récupération du résultat
+    #         count = cursor.fetchone()[0]
+
+    #         # Fermeture de la connexion
+    #         connection.close()
+
+    #         return count
+
+    #     except sqlite3.Error as error:
+    #         print("Erreur lors de l'accès à la base de données:", error)
+
+    # # Utilisation de la fonction
+    # nombre_lignes_remplies = count_filled_image_rows()
+    # print(f"Nombre de lignes remplies dans la colonne image_fromage : {nombre_lignes_remplies}")
+
+    # def get_images_fromage_df(database_path='fromages_bdd.sqlite'):
+    #     try:
+    #         connection = sqlite3.connect(database_path)
+    #         cursor = connection.cursor()
+
+    #         # Exécution de la requête pour récupérer les données de la colonne image_fromage
+    #         query = "SELECT images_fromage FROM fromages_table"
+    #         cursor.execute(query)
+
+    #         # Récupération des résultats
+    #         images_fromage = cursor.fetchall()
+
+    #         # Fermeture de la connexion
+    #         connection.close()
+
+    #         # Transformation de la liste de tuples en une liste simple
+    #         images_fromage_list = [item[0] for item in images_fromage]
+
+    #         # Création d'un DataFrame Pandas
+    #         df = pd.DataFrame(images_fromage_list, columns=['images_fromage'])
+
+    #         return df
+
+    #     except sqlite3.Error as error:
+    #         print("Erreur lors de l'accès à la base de données:", error)
+
+    # # Utilisation de la fonction pour obtenir le DataFrame
+    # images_fromage_df = get_images_fromage_df()
+
+    # # Affichage du DataFrame dans le terminal
+    # print(images_fromage_df)
+
+    # def get_fromages_without_images(database_path='fromages_bdd.sqlite'):
+    #     try:
+    #         connection = sqlite3.connect(database_path)
+    #         cursor = connection.cursor()
+
+    #         # Exécution de la requête pour récupérer les noms de fromages sans image associée
+    #         query = "SELECT fromage_names FROM fromages_table WHERE images_fromage IS NULL"
+    #         cursor.execute(query)
+
+    #         # Récupération des résultats
+    #         fromages_without_images = cursor.fetchall()
+
+    #         # Fermeture de la connexion
+    #         connection.close()
+
+    #         # Transformation de la liste de tuples en une liste simple
+    #         fromages_without_images_list = [item[0] for item in fromages_without_images]
+
+    #         return fromages_without_images_list
+
+    #     except sqlite3.Error as error:
+    #         print("Erreur lors de l'accès à la base de données:", error)
+
+    # # Utilisation de la fonction pour obtenir la liste des fromages sans image
+    # fromages_sans_images = get_fromages_without_images()
+    
+    # # Création d'un DataFrame pandas
+    # df = pd.DataFrame({"Fromage sans image associée": fromages_sans_images})
+
+    # # Affichage du DataFrame dans le terminal
+    # print(df)
