@@ -1,7 +1,7 @@
 """
 Ce module contient les importations nécessaires pour le script.
 """
-from imports import sqlite3, urlopen, Request, urlretrieve, BeautifulSoup, pd, datetime, os, timeit
+from imports import sqlite3, urlopen, urlretrieve, BeautifulSoup, pd, datetime, os, timeit
 
 class FromageETL:
     """
@@ -16,44 +16,65 @@ class FromageETL:
     """
 
     def __init__(self, url):
-        """
-        Initialise une instance de la classe FromageETL.
-
-        Parameters:
-        - url (str): L'URL à partir de laquelle les données sur les fromages seront extraites.
-        """
         self.url = url
         self.data = None
+        self.cache = {}
 
-    def extract(self):
+    def get_url_content(self, url):
         """
-        Extrait les données à partir de l'URL spécifiée et les stocke dans self.data.
-        """
-        data = urlopen(self.url)
-        self.data = data.read()
+        Récupère et met en cache le contenu d'une URL donnée.
 
-    def extract_description(self, url):
+        Args:
+            url (str): L'URL dont on veut récupérer le contenu.
+        """
+        if url not in self.cache:
+            try:
+                data = urlopen(url)
+                self.cache[url] = data.read()
+            except ImportError as e:
+                print(f"Erreur lors de l'ouverture de l'URL {url} : {e}")
+                self.cache[url] = None
+        return self.cache[url]
+
+    def extract_all(self, url):
+        """
+        Extrait toutes les informations d'une page web spécifique.
+
+        Parameters:
+        - url (str): L'URL de la page web à partir de laquelle les informations seront extraites.
+
+        Returns:
+        - description (str): La description du fromage.
+        - note_moyenne (float): La note moyenne du fromage.
+        - nb_avis (int): Le nombre d'avis sur le fromage.
+        - prix (float): Le prix du fromage.
+        - image_filename (str): Le nom du fichier de l'image du fromage.
+        """
+        html_content = self.get_url_content(url)
+        if html_content is None:
+            return None, None, None, None, None
+
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        description = self.extract_description(soup)
+        note_moyenne, nb_avis = self.extract_rating_and_reviews(soup)
+        prix = self.extract_price(soup)
+        image_filename = self.extract_and_save_image(soup)
+
+        return description, note_moyenne, nb_avis, prix, image_filename
+
+    def extract_description(self, soup):
         """
         Extrait la description d'une page web spécifique.
 
         Parameters:
-        - url (str): L'URL de la page web à partir de laquelle la description sera extraite.
+        - soup (BeautifulSoup): L'objet BeautifulSoup à partir duquel la description sera extraite.
 
         Returns:
         - description (str): La description extraite.
         """
-        try:
-            # Ouvrir l'URL et lire le contenu HTML
-            data = urlopen(url)
-            html_content = data.read()
-        except Exception as e:
-            print(f"Erreur lors de l'ouverture de l'URL {url} : {e}")
-            return ""
 
-        # Utiliser BeautifulSoup pour analyser le contenu HTML
-        soup = BeautifulSoup(html_content, 'html.parser')
-
-        # Trouver l'élément <div> avec la classe "woocommerce-product-details__short-description"
+        # Trouver <div> de la classe "woocommerce-product-details__short-description"
         description_div = soup.find('div', {'class': 'woocommerce-product-details__short-description'})
 
         # Initialiser une liste vide pour stocker les paragraphes de la description
@@ -71,30 +92,25 @@ class FromageETL:
                     # Ajouter le texte de l'élément <p> à la liste des paragraphes de la description
                     description_paragraphs.append(p.text.strip())
         else:
-            print(f"Aucun élément <div> trouvé dans l'URL {url}")
+            print("Aucun élément <div> trouvé dans le contenu HTML.")
 
         # Joindre tous les paragraphes de la description en une seule chaîne de caractères
         description = ' '.join(description_paragraphs)
 
         return description
 
-    def extract_rating_and_reviews(self, url):
+    def extract_rating_and_reviews(self, soup):
         """
         Extrait la note moyenne et le nombre d'avis d'une page web spécifique.
 
         Parameters:
-        - url (str): L'URL de la page web à partir de laquelle les informations seront extraites.
+        - soup (BeautifulSoup): L'objet BeautifulSoup 
+        à partir duquel les informations seront extraites.
 
         Returns:
         - note_moyenne (float): La note moyenne du fromage.
         - nb_avis (int): Le nombre d'avis sur le fromage.
         """
-        # Ouvrir l'URL et lire le contenu HTML
-        data = urlopen(url)
-        html_content = data.read()
-
-        # Utiliser BeautifulSoup pour analyser le contenu HTML
-        soup = BeautifulSoup(html_content, 'html.parser')
 
         # Trouver l'élément <div> avec la classe "woocommerce-product-rating"
         rating_div = soup.find('div', {'class': 'woocommerce-product-rating'})
@@ -117,22 +133,16 @@ class FromageETL:
 
         return note_moyenne, nb_avis
 
-    def extract_price(self, url):
+    def extract_price(self, soup):
         """
         Extrait le prix d'une page web spécifique.
 
         Parameters:
-        - url (str): L'URL de la page web à partir de laquelle les informations seront extraites.
+        - soup (BeautifulSoup): L'objet BeautifulSoup à partir duquel le prix sera extrait.
 
         Returns:
         - prix (float): Le prix du fromage.
         """
-        # Ouvrir l'URL et lire le contenu HTML
-        data = urlopen(url)
-        html_content = data.read()
-
-        # Utiliser BeautifulSoup pour analyser le contenu HTML
-        soup = BeautifulSoup(html_content, 'html.parser')
 
         # Trouver la balise parente <p class="price">
         parent_tag = soup.find('p', class_='price')
@@ -160,24 +170,19 @@ class FromageETL:
 
         return prix
 
-    def extract_and_save_image(self, url, save_dir='./images_fromage/'):
+    def extract_and_save_image(self, soup, save_dir='./images_fromage/'):
         """
         Extrait l'URL de l'image d'une page web spécifique
         et sauvegarde l'image dans un dossier local.
 
         Parameters:
-        - url (str): L'URL de la page web à partir de laquelle l'URL de l'image sera extraite.
+        - soup (BeautifulSoup): L'objet BeautifulSoup 
+        à partir duquel l'URL de l'image sera extraite.
         - save_dir (str): Le chemin du dossier où l'image sera sauvegardée.
 
         Returns:
         - image_filename (str): Le nom du fichier de l'image sauvegardée.
         """
-        # Ouvrir l'URL et lire le contenu HTML
-        data = urlopen(url)
-        html_content = data.read()
-
-        # Utiliser BeautifulSoup pour analyser le contenu HTML
-        soup = BeautifulSoup(html_content, 'html.parser')
 
         # Trouver le <div> avec la classe "woocommerce-product-gallery__wrapper"
         div_tag = soup.find('div', {'class': 'woocommerce-product-gallery__wrapper'})
@@ -204,8 +209,6 @@ class FromageETL:
                 # Créer le chemin complet du fichier de l'image
                 image_filepath = os.path.join(save_dir, image_filename)
 
-                print("Téléchargement de l'image depuis l'URL :", image_url)
-
                 # Télécharger et sauvegarder l'image
                 urlretrieve(image_url, image_filepath)
 
@@ -221,7 +224,7 @@ class FromageETL:
         'fromage_familles', 'pates', 'url_info_fromage', 'descriptions',
         'note_moyenne', 'nb_avis', 'prix', et 'images_fromage'.
         """
-        soup = BeautifulSoup(self.data, 'html.parser')
+        soup = BeautifulSoup(self.get_url_content(self.url), 'html.parser')
         cheese_dish = soup.find('table')
 
         fromage_names = []
@@ -250,7 +253,7 @@ class FromageETL:
                 url_info_fromage = "https://www.laboitedufromager.com" + link['href'] if link else ""
 
                 # Initialiser tout à None
-                description = ""
+                description = None
                 note_moyenne = None
                 nb_avis = None
                 prix = None
@@ -259,10 +262,7 @@ class FromageETL:
                 # Vérifier si l'URL est présente
                 if url_info_fromage:
                     # Extraire tout du fichier de l'image depuis l'URL
-                    description = self.extract_description(url_info_fromage)
-                    note_moyenne, nb_avis = self.extract_rating_and_reviews(url_info_fromage)
-                    prix = self.extract_price(url_info_fromage)
-                    image_filename = self.extract_and_save_image(url_info_fromage)
+                    description, note_moyenne, nb_avis, prix, image_filename = self.extract_all(url_info_fromage)
 
                 # Ignore les lignes vides
                 if fromage_name != '' and fromage_famille != '' and pate != '':
@@ -276,31 +276,19 @@ class FromageETL:
                     prixs.append(prix)
                     images_fromage.append(image_filename)
 
-                # # Imprime la longueur de chaque liste
-                # print("Nombre de fromage_names: ", len(fromage_names))
-                # print("Nombre de fromage_familles: ", len(fromage_familles))
-                # print("Nombre de pates: ", len(pates))
-                # print("Nombre de url_info_fromages: ", len(url_info_fromages))
-                # print("Nombre de descriptions: ", len(descriptions))
-                # print("Nombre de note_moyennes: ", len(note_moyennes))
-                # print("Nombre de nb_aviss: ", len(nb_aviss))
-                # print("Nombre de prixs: ", len(prixs))
-                print("Nombre de images_fromage: ", len(images_fromage))
+        self.data = pd.DataFrame({
+            'fromage_names': fromage_names,
+            'fromage_familles': fromage_familles,
+            'pates': pates,
+            'url_info_fromages': url_info_fromages,
+            'descriptions': descriptions,
+            'note_moyenne': note_moyennes,
+            'nb_avis': nb_aviss,
+            'prix' : prixs,
+            'images_fromage': images_fromage
+        })
+        self.data['creation_date'] = datetime.now()
 
-            self.data = pd.DataFrame({
-                'fromage_names': fromage_names,
-                'fromage_familles': fromage_familles,
-                'pates': pates,
-                'url_info_fromages': url_info_fromages,
-                'descriptions': descriptions,
-                'note_moyenne': note_moyennes,
-                'nb_avis': nb_aviss,
-                'prix' : prixs,
-                'images_fromage': images_fromage
-            })
-            self.data['creation_date'] = datetime.now()
-
-            # print(self.data)
 
     def load(self, database_name, table_name):
         """
@@ -445,8 +433,6 @@ class FromageETL:
         """
         self.data.loc[self.data.fromage_names == old_name, 'fromage_names'] = new_name
 
-    import sqlite3
-
     def delete_row(self, fromage_name):
         """
         Supprime une ligne de l'ensemble de données basée sur le nom du fromage.
@@ -483,7 +469,7 @@ class FromageETL:
 start = timeit.default_timer()
 A = 'https://www.laboitedufromager.com/liste-des-fromages-par-ordre-alphabetique/'
 fromage_etl = FromageETL(A)
-fromage_etl.extract()
+fromage_etl.extract_all(A)
 fromage_etl.transform()
 fromage_etl.load('fromages_bdd.sqlite', 'fromages_table')
 data_from_db_external = fromage_etl.read_from_database('fromages_bdd.sqlite', 'fromages_table')
@@ -491,92 +477,3 @@ data_from_db_external = fromage_etl.read_from_database('fromages_bdd.sqlite', 'f
 # Afficher le DataFrame
 print(data_from_db_external)
 print(timeit.default_timer() - start)
-
-    # def count_filled_image_rows(database_path='fromages_bdd.sqlite'):
-    #     try:
-    #         # Connexion à la base de données
-    #         connection = sqlite3.connect(database_path)
-    #         cursor = connection.cursor()
-
-    #         # Exécution de la requête pour compter les lignes avec une valeur non nulle dans la colonne image_fromage
-    #         query = "SELECT COUNT(*) FROM fromages_table WHERE images_fromage IS NOT NULL"
-    #         cursor.execute(query)
-
-    #         # Récupération du résultat
-    #         count = cursor.fetchone()[0]
-
-    #         # Fermeture de la connexion
-    #         connection.close()
-
-    #         return count
-
-    #     except sqlite3.Error as error:
-    #         print("Erreur lors de l'accès à la base de données:", error)
-
-    # # Utilisation de la fonction
-    # nombre_lignes_remplies = count_filled_image_rows()
-    # print(f"Nombre de lignes remplies dans la colonne image_fromage : {nombre_lignes_remplies}")
-
-    # def get_images_fromage_df(database_path='fromages_bdd.sqlite'):
-    #     try:
-    #         connection = sqlite3.connect(database_path)
-    #         cursor = connection.cursor()
-
-    #         # Exécution de la requête pour récupérer les données de la colonne image_fromage
-    #         query = "SELECT images_fromage FROM fromages_table"
-    #         cursor.execute(query)
-
-    #         # Récupération des résultats
-    #         images_fromage = cursor.fetchall()
-
-    #         # Fermeture de la connexion
-    #         connection.close()
-
-    #         # Transformation de la liste de tuples en une liste simple
-    #         images_fromage_list = [item[0] for item in images_fromage]
-
-    #         # Création d'un DataFrame Pandas
-    #         df = pd.DataFrame(images_fromage_list, columns=['images_fromage'])
-
-    #         return df
-
-    #     except sqlite3.Error as error:
-    #         print("Erreur lors de l'accès à la base de données:", error)
-
-    # # Utilisation de la fonction pour obtenir le DataFrame
-    # images_fromage_df = get_images_fromage_df()
-
-    # # Affichage du DataFrame dans le terminal
-    # print(images_fromage_df)
-
-    # def get_fromages_without_images(database_path='fromages_bdd.sqlite'):
-    #     try:
-    #         connection = sqlite3.connect(database_path)
-    #         cursor = connection.cursor()
-
-    #         # Exécution de la requête pour récupérer les noms de fromages sans image associée
-    #         query = "SELECT fromage_names FROM fromages_table WHERE images_fromage IS NULL"
-    #         cursor.execute(query)
-
-    #         # Récupération des résultats
-    #         fromages_without_images = cursor.fetchall()
-
-    #         # Fermeture de la connexion
-    #         connection.close()
-
-    #         # Transformation de la liste de tuples en une liste simple
-    #         fromages_without_images_list = [item[0] for item in fromages_without_images]
-
-    #         return fromages_without_images_list
-
-    #     except sqlite3.Error as error:
-    #         print("Erreur lors de l'accès à la base de données:", error)
-
-    # # Utilisation de la fonction pour obtenir la liste des fromages sans image
-    # fromages_sans_images = get_fromages_without_images()
-    
-    # # Création d'un DataFrame pandas
-    # df = pd.DataFrame({"Fromage sans image associée": fromages_sans_images})
-
-    # # Affichage du DataFrame dans le terminal
-    # print(df)
