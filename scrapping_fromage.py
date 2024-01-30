@@ -1,7 +1,7 @@
 """
 Ce module contient les importations nécessaires pour le script.
 """
-from imports import sqlite3, urlopen, BeautifulSoup, pd, datetime
+from imports import sqlite3, urlopen, Request, urlretrieve, BeautifulSoup, pd, datetime, os
 
 class FromageETL:
     """
@@ -151,6 +151,57 @@ class FromageETL:
 
         return prix
 
+    def extract_and_save_image(self, url, save_dir='./images_fromage/'):
+        """
+        Extrait l'URL de l'image d'une page web spécifique
+        et sauvegarde l'image dans un dossier local.
+
+        Parameters:
+        - url (str): L'URL de la page web à partir de laquelle l'URL de l'image sera extraite.
+        - save_dir (str): Le chemin du dossier où l'image sera sauvegardée.
+
+        Returns:
+        - image_filename (str): Le nom du fichier de l'image sauvegardée.
+        """
+        # Ouvrir l'URL et lire le contenu HTML
+        data = urlopen(url)
+        html_content = data.read()
+
+        # Utiliser BeautifulSoup pour analyser le contenu HTML
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        # Trouver le <div> avec la classe "woocommerce-product-gallery__wrapper"
+        div_tag = soup.find('div', {'class': 'woocommerce-product-gallery__wrapper'})
+
+        # Initialiser le nom du fichier de l'image comme None
+        image_filename = None
+
+        # Vérifier si le <div> a été trouvé
+        if div_tag:
+            # Trouver l'élément <a> à l'intérieur du <div>
+            a_tag = div_tag.find('a')
+
+            # Vérifier si l'élément <a> a été trouvé
+            if a_tag:
+                # Extraire l'URL de l'image à partir de l'attribut 'href' de l'élément <a>
+                image_url = a_tag['href']
+
+                # Extraire le nom du fichier de l'image à partir de l'URL de l'image
+                image_filename = os.path.basename(image_url)
+
+                # Créer le dossier s'il n'existe pas déjà
+                os.makedirs(save_dir, exist_ok=True)
+
+                # Créer le chemin complet du fichier de l'image
+                image_filepath = os.path.join(save_dir, image_filename)
+
+                print("Téléchargement de l'image depuis l'URL :", image_url)
+
+                # Télécharger et sauvegarder l'image
+                urlretrieve(image_url, image_filepath)
+
+        return image_filename
+
     def transform(self):
         """
         Transforme les données extraites en un DataFrame pandas structuré.
@@ -158,7 +209,8 @@ class FromageETL:
         Le processus implique l'analyse HTML des données,
         la récupération des informations sur les fromages
         à partir de la table HTML, et la création d'un DataFrame avec les colonnes 'fromage_names', 
-        'fromage_familles', 'pates', 'url_info_fromage', et 'creation_date'.
+        'fromage_familles', 'pates', 'url_info_fromage', 'descriptions',
+        'note_moyenne', 'nb_avis', 'prix', et 'images_fromage'.
         """
         soup = BeautifulSoup(self.data, 'html.parser')
         cheese_dish = soup.find('table')
@@ -171,6 +223,7 @@ class FromageETL:
         note_moyennes = []
         nb_aviss = []
         prixs = []
+        images_fromage = []
 
         for row in cheese_dish.find_all('tr'):
             columns = row.find_all('td')
@@ -187,18 +240,20 @@ class FromageETL:
                 link = columns[0].find('a')
                 url_info_fromage = "https://www.laboitedufromager.com" + link['href'] if link else ""
 
-                # Initialiser la description, la note moyenne et le nombre d'avis comme une chaîne vide
+                # Initialiser tout à None
                 description = ""
                 note_moyenne = None
                 nb_avis = None
                 prix = None
+                image_filename = None
 
                 # Vérifier si l'URL est présente
                 if url_info_fromage:
-                    # Extraire depuis l'URL
+                    # Extraire tout du fichier de l'image depuis l'URL
                     description = self.extract_description(url_info_fromage)
                     note_moyenne, nb_avis = self.extract_rating_and_reviews(url_info_fromage)
                     prix = self.extract_price(url_info_fromage)
+                    image_filename = self.extract_and_save_image(url_info_fromage)
 
                 # Ignore les lignes vides
                 if fromage_name != '' and fromage_famille != '' and pate != '':
@@ -210,22 +265,33 @@ class FromageETL:
                     note_moyennes.append(note_moyenne)
                     nb_aviss.append(nb_avis)
                     prixs.append(prix)
+                    images_fromage.append(image_filename)
 
-                print(f"Nombre de prixs: {len(prixs)}")
+                # # Imprime la longueur de chaque liste
+                # print("Nombre de fromage_names: ", len(fromage_names))
+                # print("Nombre de fromage_familles: ", len(fromage_familles))
+                # print("Nombre de pates: ", len(pates))
+                # print("Nombre de url_info_fromages: ", len(url_info_fromages))
+                # print("Nombre de descriptions: ", len(descriptions))
+                # print("Nombre de note_moyennes: ", len(note_moyennes))
+                # print("Nombre de nb_aviss: ", len(nb_aviss))
+                # print("Nombre de prixs: ", len(prixs))
+                print("Nombre de images_fromage: ", len(images_fromage))
 
-        self.data = pd.DataFrame({
-            'fromage_names': fromage_names,
-            'fromage_familles': fromage_familles,
-            'pates': pates,
-            'url_info_fromages': url_info_fromages,
-            'descriptions': descriptions,
-            'note_moyenne': note_moyennes,
-            'nb_avis': nb_aviss,
-            'prix' : prixs
-        })
-        self.data['creation_date'] = datetime.now()
+            self.data = pd.DataFrame({
+                'fromage_names': fromage_names,
+                'fromage_familles': fromage_familles,
+                'pates': pates,
+                'url_info_fromages': url_info_fromages,
+                'descriptions': descriptions,
+                'note_moyenne': note_moyennes,
+                'nb_avis': nb_aviss,
+                'prix' : prixs,
+                'images_fromage': images_fromage
+            })
+            self.data['creation_date'] = datetime.now()
 
-        print(self.data)
+            print(self.data)
 
     def load(self, database_name, table_name):
         """
@@ -397,7 +463,7 @@ class FromageETL:
         # Créez une nouvelle colonne 'lettre_alpha'
         data_from_db['lettre_alpha'] = data_from_db['fromage_familles'].str[0]
 
-        # Utilisez groupby pour regrouper par 'fromage_familles' et compter le nombre de fromages dans chaque groupe
+        # Utilisez groupby pour regrouper par 'fromage_familles' et compter les fromages
         grouped_data = data_from_db.groupby('fromage_familles').size().reset_index(name='fromage_nb')
 
         return grouped_data
