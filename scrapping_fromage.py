@@ -295,7 +295,6 @@ class FromageETL:
         })
         self.data['creation_date'] = datetime.now()
 
-
     def load(self, database_name, table_name):
         """
         Charge les données dans une table SQLite spécifiée.
