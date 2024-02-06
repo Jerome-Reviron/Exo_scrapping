@@ -20,9 +20,12 @@ print("Colonnes dans df_cheeses_sales:", df_cheeses_sales.columns)
 merged_df = pd.merge(df_fromages, df_cheeses_sales, on='fromage_names', how='left')
 
 # Renommer les colonnes 'dates' et 'quantities' dans le DataFrame fusionné
-merged_df = merged_df.rename(columns={'dates': 'dates de ventes', 'quantities': 'quantités vendues'})
+merged_df = merged_df.rename(columns={'dates': 'dates de ventes', 'quantities': 'quantites vendues'})
+
+# Convertir la colonne 'dates de ventes' en timestamps avec un format flexible
+merged_df['dates de ventes'] = pd.to_datetime(merged_df['dates de ventes'], errors='coerce')
 
 # Enregistrer le DataFrame fusionné dans un nouveau fichier CSV
-merged_df.to_csv(output_merged_csv_path, index=False, encoding='utf-8', sep=',')
+merged_df.to_csv(output_merged_csv_path, index=False, encoding='utf-8', sep=',', na_rep='NULL')
 
 print(f"Données fusionnées avec succès dans {output_merged_csv_path}")

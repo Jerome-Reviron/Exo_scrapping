@@ -12,7 +12,7 @@ conn = sqlite3.connect('fromages_bdd.sqlite')
 cursor = conn.cursor()
 
 # Exécution de la requête pour récupérer toutes les données de la table
-cursor.execute('SELECT * FROM fromages_table')
+cursor.execute('SELECT fromage_names, fromage_familles, pates, url_info_fromages, descriptions, note_moyenne, nb_avis, prix, images_fromage FROM fromages_table')
 
 # Récupération de toutes les lignes de résultats
 rows = cursor.fetchall()
@@ -27,9 +27,9 @@ csv_filename = os.path.join(output_folder, 'fromages_table.csv')
 with open(csv_filename, 'w', newline='', encoding='utf-8') as csv_file:
     csv_writer = csv.writer(csv_file)
     
-    # Écriture de l'en-tête du fichier CSV
+    # Écriture de l'en-tête du fichier CSV (sans la colonne 'creation_date')
     csv_writer.writerow(['fromage_names', 'fromage_familles', 'pates', 'url_info_fromages',
-                        'descriptions', 'note_moyenne', 'nb_avis', 'prix', 'images_fromage', 'creation_date'])
+                        'descriptions', 'note_moyenne', 'nb_avis', 'prix', 'images_fromage'])
     
     # Écriture des données dans le fichier CSV
     csv_writer.writerows(rows)
