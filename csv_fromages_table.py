@@ -1,7 +1,7 @@
 from imports import sqlite3, csv, os
 
 # Spécifiez le chemin du dossier où vous souhaitez enregistrer le CSV
-output_folder = r'C:\Users\HB\Desktop\Projet Final SQL Fromage'
+output_folder = r'C:\Users\HB\Desktop\Git Exo_Scrapping\csv'
 
 # Assurez-vous que le dossier existe, sinon, créez-le
 if not os.path.exists(output_folder):
