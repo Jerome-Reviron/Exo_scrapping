@@ -95,8 +95,11 @@ class FromageETL:
             for p in p_elements:
                 # Vérifier si le texte de l'élément <p> n'est pas vide
                 if p.text.strip() != '':
+                    # Supprimer les balises <br> dans le texte de la balise <p>
+                    for br in p.findAll('br'):
+                        br.replace_with(' ')
                     # Ajouter le texte de l'élément <p> à la liste des paragraphes de la description
-                    description_paragraphs.append(p.text.strip())
+                    description_paragraphs.append(p.text.strip().replace('\n', ' '))
         else:
             print("Aucun élément <div> trouvé dans le contenu HTML.")
 

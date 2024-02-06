@@ -5,9 +5,9 @@ CREATE TABLE D_Fromage (
     pates VARCHAR2(80) NULL,
     url_info_fromages VARCHAR2(100) NULL,
     descriptions VARCHAR2(1500) NULL,
-    note_moyenne NUMBER(10) NULL,
-    nb_avis NUMBER(10) NULL,
-    prix NUMBER(10) NULL,
+    note_moyenne NUMBER(10,2) NULL,
+    nb_avis NUMBER(10,0) NULL,
+    prix NUMBER(10,2) NULL,
     images_fromage VARCHAR2(100) NULL,
     PRIMARY KEY (D_fromage_names)
 );
