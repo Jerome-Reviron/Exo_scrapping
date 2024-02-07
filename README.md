@@ -9,6 +9,10 @@
 - [Scrapping de Fromages à partir d'une Url](#scrapping_fromage.py)
 - [Test_scrapping de Fromages](#test_scrapping_fromages.py)
 - [Interface fromage_UI](#interface_fromage.py)
+- [Création fromages_table.csv](#csv_fromages_table.py)
+- [Création des Tables ODS](#create_table_ODS)
+- [Création des Tables DWH](#create_table_DWH)
+- [Interface questionnaire_UI](#interface_questionnaire.py)
 
 ## Introduction <a name="introduction"></a>
 Ce répertoire est conçu durant ma formation POEI Développeur Applicatif Python, afin d'intégrer l'entreprise Pharma Pilot à Cournond'Auvergne.<br>
@@ -233,3 +237,200 @@ Cela permet de tester les fonctionnalités de la classe `FromageUI` sans dépend
 
 Le script couvre toutes les principales fonctionnalités de la classe `FromageUI`, assurant ainsi que chaque fonctionnalité fonctionne comme prévu.
 
+# Création fromages_table.csv <a name="csv_fromages_table.py"></a>
+
+Ce script Python, csv_fromages_table.py, a pour objectif d'extraire les données de la table "fromages_table" d'une base de données SQLite appelée "fromages_bdd.sqlite". Les données extraites sont ensuite exportées vers un fichier CSV nommé "fromages_table.csv". Voici un résumé des fonctionnalités, utilisations et particularités de ce script.
+
+### Fonctionnalités
+
+-**Connexion à la Base de Données**:<br>
+Le script utilise le module sqlite3 pour se connecter à la base de données SQLite "fromages_bdd.sqlite" et initialiser un curseur pour exécuter des requêtes SQL.
+
+-**Extraction des Données**:<br>
+Une requête SQL est exécutée pour récupérer toutes les données de la table "fromages_table", incluant des informations telles que le nom du fromage, la famille, la pâte, l'URL des informations sur les fromages, les descriptions, la note moyenne, le nombre d'avis, le prix et l'image du fromage.
+
+-**Création du Dossier de Sortie**:<br>
+Avant d'écrire les données dans un fichier CSV, le script vérifie si le dossier de sortie spécifié (output_folder) existe. S'il n'existe pas, le script le crée.
+
+-**Écriture dans un Fichier CSV**:<br>
+Les données extraites sont ensuite écrites dans le fichier CSV "fromages_table.csv" avec le point-virgule comme séparateur.
+
+### Utilisation
+
+1. Assurez-vous d'avoir les bibliothèques requises installées en exécutant pip install pandas.
+2. Modifiez le chemin du dossier de sortie dans le script (output_folder) si nécessaire.
+3. Exécutez le script Python.
+
+### Structure du Projet
+
+-**csv_fromages_table.py**:<br>
+Le script principal qui extrait les données de la base de données SQLite et les exporte vers un fichier CSV.
+
+-**imports.py**:<br>
+Fichier contenant les importations nécessaires pour le script.
+
+### Particularités
+
+-**Gestion de l'Exportation**:<br>
+Le script crée le dossier de sortie s'il n'existe pas déjà, assurant ainsi que le fichier CSV peut être créé avec succès.
+
+-**Séparateur Spécifique**:<br>
+Le script utilise le point-virgule comme séparateur lors de l'écriture des données dans le fichier CSV, offrant une certaine flexibilité en matière de séparateurs de données.
+
+### Prérequis
+
+-**Python** : Le script est conçu pour fonctionner avec Python.
+-**Bibliothèques** : Assurez-vous d'avoir installé les bibliothèques sqlite3, csv, os nécessaires répertoriées dans le fichier imports.py.
+
+# Création des Tables ODS <a name="create_table_ODS"></a>
+
+Ce fichier SQL, `create_table_ODS_fromages_ventes.sql`, contient les requêtes nécessaires pour créer deux tables dans le cadre du processus ODS (Operational Data Store). Les tables créées sont `ODS_fromages_table` et `ODS_cheeses_sales` à partir des deux fichiers 'fromages_table.csv' et 'cheeses_sales.csv'. Voici un résumé des fonctionnalités, utilisations et particularités de ces requêtes.
+
+## Table ODS_fromages_table
+
+- **Description**:<br>
+  La table `ODS_fromages_table` est destinée à stocker des informations sur les fromages, comprenant des détails tels que le nom du fromage, la famille, la pâte, l'URL des informations sur les fromages, les descriptions, la note moyenne, le nombre d'avis, le prix et l'image du fromage.
+
+- **Colonnes**:<br>
+  - `fromage_names` (VARCHAR2(50)) : Nom du fromage (non nul).
+  - `fromage_familles` (VARCHAR2(20)) : Famille du fromage.
+  - `pates` (VARCHAR2(80)) : Type de pâte du fromage.
+  - `url_info_fromages` (VARCHAR2(100)) : URL des informations sur le fromage.
+  - `descriptions` (VARCHAR2(1500)) : Description du fromage.
+  - `note_moyenne` (NUMBER(10,2)) : Note moyenne du fromage.
+  - `nb_avis` (NUMBER(10,0)) : Nombre d'avis sur le fromage.
+  - `prix` (NUMBER(10,2)) : Prix du fromage.
+  - `images_fromage` (VARCHAR2(100)) : Chemin vers l'image du fromage.
+
+## Table ODS_cheeses_sales
+
+- **Description**:<br>
+  La table `ODS_cheeses_sales` stocke des informations sur les ventes de fromages, incluant des détails tels que le numéro de transaction, le nom du fromage, la date de la transaction et les quantités vendues.
+
+- **Colonnes**:<br>
+  - `transaction` (VARCHAR2(50)) : Numéro de transaction (non nul).
+  - `cheeses` (VARCHAR2(50)) : Nom du fromage.
+  - `dates` (TIMESTAMP(6)) : Date de la transaction.
+  - `quantities` (NUMBER(5)) : Quantités vendues.
+
+## Utilisation
+
+1. Connectez-vous dans Oracle SQL Developer après l'avoir installé ainsi et après avoir installé et confirguré Oracle Express
+2. Exécutez le contenu du fichier `create_table_ODS_fromages_ventes.sql` dans Oracle SQL Developer pour créer les tables.
+
+## Particularités
+
+- **Structure ODS**:<br>
+  Les tables créées suivent le modèle d'un Operational Data Store (ODS), stockant des données opérationnelles à des fins de reporting et d'analyse.
+
+- **Colonnes Détaillées**:<br>
+  Les colonnes sont spécifiées avec des détails précis pour chaque type de données, assurant une représentation adéquate des informations.
+
+# Création des Tables DWH <a name="create_table_DWH"></a>
+
+Ce fichier SQL, `create_table_DWH_fromages_ventes.sql`, contient les requêtes nécessaires pour créer trois tables dans le cadre du processus DWH (Data Warehouse). Les tables créées sont `D_Fromage`, `D_Dates_de_ventes` et `F_Vente`. Voici un résumé des fonctionnalités, utilisations et particularités de ces requêtes.
+
+## Table dimension D_Fromage
+
+- **Description**:<br>
+  La table `D_Fromage` est une table de dimension destinée à stocker des informations sur les fromages. Elle inclut des détails tels que le nom du fromage, la famille, la pâte, l'URL des informations sur les fromages, les descriptions, la note moyenne, le nombre d'avis, le prix et l'image du fromage.
+
+- **Colonnes**:<br>
+  - `D_fromage_names` (VARCHAR2(50)) : Nom du fromage (non nul).
+  - `fromage_familles` (VARCHAR2(20)) : Famille du fromage.
+  - `pates` (VARCHAR2(80)) : Type de pâte du fromage.
+  - `url_info_fromages` (VARCHAR2(100)) : URL des informations sur le fromage.
+  - `descriptions` (VARCHAR2(1500)) : Description du fromage.
+  - `note_moyenne` (NUMBER(10,2)) : Note moyenne du fromage.
+  - `nb_avis` (NUMBER(10,0)) : Nombre d'avis sur le fromage.
+  - `prix` (NUMBER(10,2)) : Prix du fromage.
+  - `images_fromage` (VARCHAR2(100)) : Chemin vers l'image du fromage.
+  
+- **Clé Primaire**:<br>
+  - La clé primaire est définie sur la colonne `D_fromage_names`.
+
+## Table dimension D_Dates_de_ventes
+
+- **Description**:<br>
+  La table `D_Dates_de_ventes` est une table de dimension destinée à stocker des informations sur les dates de ventes. Elle inclut des détails tels que le timestamp, le jour, le mois et l'année de la vente.
+
+- **Colonnes**:<br>
+  - `EpochTimestamp` (TIMESTAMP(6)) : Timestamp de la vente (non nul).
+  - `EpochDay` (NUMBER(2)) : Jour de la vente.
+  - `EpochMonth` (NUMBER(2)) : Mois de la vente.
+  - `EpochYear` (NUMBER(4)) : Année de la vente.
+  
+- **Clé Primaire**:<br>
+  - La clé primaire est définie sur la colonne `EpochTimestamp`.
+
+## Table de fait F_Vente
+
+- **Description**:<br>
+  La table `F_Vente` est une table de fait destinée à stocker des informations sur les ventes de fromages. Elle inclut des détails tels que le numéro de transaction, la clé étrangère vers la table `D_Fromage` (`D_Fromage_FK`), la clé étrangère vers la table `D_Dates_de_ventes` (`D_Dates_de_ventes_FK`) et les quantités vendues.
+
+- **Colonnes**:<br>
+  - `F_Transaction` (VARCHAR2(50)) : Numéro de transaction (non nul).
+  - `D_Fromage_FK` (VARCHAR2(50)) : Clé étrangère vers la table `D_Fromage`.
+  - `D_Dates_de_ventes_FK` (TIMESTAMP(6)) : Clé étrangère vers la table `D_Dates_de_ventes`.
+  - `quantites_vendues` (NUMBER(5)) : Quantités vendues.
+  
+- **Clés Primaires et Étrangères**:<br>
+  - La clé primaire est définie sur les colonnes `F_Transaction`, `D_Fromage_FK` et `D_Dates_de_ventes_FK`.
+  - Il existe deux contraintes de clé étrangère, une référençant la table `D_Fromage` et l'autre référençant la table `D_Dates_de_ventes`.
+
+## Utilisation
+
+1. Connectez-vous dans Oracle SQL Developer après l'avoir installé ainsi et après avoir installé et configuré Oracle Express.
+2. Exécutez le contenu du fichier `create_table_DWH_fromages_ventes.sql` dans Oracle SQL Developer pour créer les tables.
+
+## Particularités
+
+- **Structure DWH**:<br>
+  Les tables créées suivent le modèle d'un Data Warehouse (DWH), stockant des données optimisées pour les requêtes analytiques.
+
+- **Colonnes Détaillées**:<br>
+  Les colonnes sont spécifiées avec des détails précis pour chaque type de données, assurant une représentation adéquate des informations.
+
+- **Clés Primaires et Étrangères**:<br>
+  La structure de clés primaires et étrangères garantit l'intégrité référentielle entre les tables, facilitant
+
+## Interface `questionnaire_ui.py` <a name="interface_questionnaire.py"></a>
+
+Ce script Python, `questionnaire_ui.py`, présente une interface utilisateur graphique pour répondre à différentes questions basées sur une base de données Oracle. Voici un résumé des fonctionnalités de ce script.
+
+### Fonctionnalités
+
+- **Importations Nécessaires:**
+  - Le module contient les importations nécessaires pour le script, notamment les bibliothèques `cx_Oracle`, `tk`, `ttk`, `pd` (pandas), `FigureCanvasTkAgg`, et `plt` (Matplotlib).
+
+- **Fonction d'Exécution de Requête:**
+  - La fonction `execute_query(query)` se connecte à la base de données Oracle, exécute une requête SQL, récupère les résultats sous forme de DataFrame pandas, puis ferme la connexion.
+
+- **Test de Connexion à la Base de Données:**
+  - La fonction `test_connection()` tente d'établir une connexion à la base de données Oracle pour vérifier son bon fonctionnement.
+
+- **Questions Spécifiques:**
+  - Les fonctions `question_1()`, `question_2()`, et `question_3()` répondent à des questions spécifiques en exécutant des requêtes SQL complexes et en affichant les résultats sous forme de DataFrame.
+
+- **Affichage de Graphiques Matplotlib dans une Interface Tkinter:**
+  - La fonction `show_plot(fig, width, height)` affiche un graphique Matplotlib dans une fenêtre Tkinter.
+
+- **Gestion du Choix de la Question:**
+  - La fonction `handle_choice()` est appelée lorsqu'un utilisateur choisit une question dans le menu déroulant. Elle récupère la question sélectionnée et appelle la fonction correspondante pour afficher la réponse.
+
+- **Interface Graphique Tkinter:**
+  - Le script crée une interface graphique Tkinter avec un menu déroulant permettant de choisir une question, un bouton de validation, et un bouton pour fermer la fenêtre en mode plein écran.
+
+### Utilisation
+
+1. Importez le module `questionnaire_ui.py`.
+2. Exécutez le script pour lancer l'interface utilisateur.
+3. Choisissez une question dans le menu déroulant.
+4. Cliquez sur le bouton "Valider" pour afficher la réponse correspondante.
+5. Pour fermer la fenêtre en mode plein écran, cliquez sur le bouton "Fermer la fenêtre".
+
+### Remarques
+
+- Assurez-vous d'avoir les bibliothèques nécessaires installées, notamment `cx_Oracle`, `tkinter`, `pandas`, et `matplotlib`.
+- La connexion à la base de données Oracle est configurée avec les paramètres "system", "root", et "//localhost:1521/xe". Vous pouvez ajuster ces paramètres selon votre configuration.
+- Ce script propose une solution conviviale pour explorer des données de ventes de fromages stockées dans une base de données Oracle. N'hésitez pas à personnaliser les requêtes ou l'interface en fonction de vos besoins spécifiques.
