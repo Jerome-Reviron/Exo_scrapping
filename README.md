@@ -326,6 +326,10 @@ Ce fichier SQL, `create_table_ODS_fromages_ventes.sql`, contient les requêtes n
 - **Colonnes Détaillées**:<br>
   Les colonnes sont spécifiées avec des détails précis pour chaque type de données, assurant une représentation adéquate des informations.
 
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/MCD_fromages_ventes.png)
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/MLD_DWH1_fromages_ventes.png)
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/MPD_DWH_fromages_ventes.png)
+
 # Création des Tables DWH <a name="create_table_DWH"></a>
 
 Ce fichier SQL, `create_table_DWH_fromages_ventes.sql`, contient les requêtes nécessaires pour créer trois tables dans le cadre du processus DWH (Data Warehouse). Les tables créées sont `D_Fromage`, `D_Dates_de_ventes` et `F_Vente`. Voici un résumé des fonctionnalités, utilisations et particularités de ces requêtes.
@@ -398,6 +402,9 @@ Ce fichier SQL, `create_table_DWH_fromages_ventes.sql`, contient les requêtes n
 
 Ce script Python, `questionnaire_ui.py`, présente une interface utilisateur graphique pour répondre à différentes questions basées sur une base de données Oracle. Voici un résumé des fonctionnalités de ce script.
 
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/questionnaire_ui.png)
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/choix_question.png)
+
 ### Fonctionnalités
 
 - **Importations Nécessaires:**
@@ -434,3 +441,7 @@ Ce script Python, `questionnaire_ui.py`, présente une interface utilisateur gra
 - Assurez-vous d'avoir les bibliothèques nécessaires installées, notamment `cx_Oracle`, `tkinter`, `pandas`, et `matplotlib`.
 - La connexion à la base de données Oracle est configurée avec les paramètres "system", "root", et "//localhost:1521/xe". Vous pouvez ajuster ces paramètres selon votre configuration.
 - Ce script propose une solution conviviale pour explorer des données de ventes de fromages stockées dans une base de données Oracle. N'hésitez pas à personnaliser les requêtes ou l'interface en fonction de vos besoins spécifiques.
+
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/reponse_1.png)
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/reponse_2.png)
+![Tableau du résultat](https://github.com/Jerome-Reviron/Exo_scrapping/blob/main/images/reponse_3.png)
