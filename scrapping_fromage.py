@@ -1,7 +1,7 @@
 """
 Ce module contient les importations nécessaires pour le script.
 """
-from imports import sqlite3, urlopen, BeautifulSoup, pd, datetime
+from imports import sqlite3, urlopen, urlretrieve, BeautifulSoup, pd, datetime, os, timeit
 
 class FromageETL:
     """
@@ -13,24 +13,215 @@ class FromageETL:
     Attributes :
     - url (str) : L'URL à partir de laquelle les données peuvent être extraites.
     - data (pd.DataFrame) : Un DataFrame pandas contenant les données sur les fromages.
+    - cache (dict) : Un dictionnaire utilisé pour stocker des données en cache.
     """
 
     def __init__(self, url):
-        """
-        Initialise une instance de la classe FromageETL.
-
-        Parameters:
-        - url (str): L'URL à partir de laquelle les données sur les fromages seront extraites.
-        """
         self.url = url
         self.data = None
+        self.cache = {}
 
-    def extract(self):
+    def get_url_content(self, url):
         """
-        Extrait les données à partir de l'URL spécifiée et les stocke dans self.data.
+        Récupère et met en cache le contenu d'une URL donnée.
+
+        Cette méthode prend une URL en paramètre, tente de récupérer son contenu
+        en utilisant la fonctionurlopen du module urllib, 
+        puis met le contenu en cache pour éviter de refaire la requête si
+        la même URL est à nouveau spécifiée.
+
+        Args:
+            url (str): L'URL dont on veut récupérer le contenu.
         """
-        data = urlopen(self.url)
-        self.data = data.read()
+        if url not in self.cache:
+            try:
+                data = urlopen(url)
+                self.cache[url] = data.read()
+            except ImportError as e:
+                print(f"Erreur lors de l'ouverture de l'URL {url} : {e}")
+                self.cache[url] = None
+        return self.cache[url]
+
+    def extract_all(self, url):
+        """
+        Extrait toutes les informations d'une page web spécifique.
+
+        Parameters:
+        - url (str): L'URL de la page web à partir de laquelle les informations seront extraites.
+
+        Returns:
+        - description (str): La description du fromage.
+        - note_moyenne (float): La note moyenne du fromage.
+        - nb_avis (int): Le nombre d'avis sur le fromage.
+        - prix (float): Le prix du fromage.
+        - image_filename (str): Le nom du fichier de l'image du fromage.
+        """
+        html_content = self.get_url_content(url)
+        if html_content is None:
+            return None, None, None, None, None
+
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        description = self.extract_description(soup)
+        note_moyenne, nb_avis = self.extract_rating_and_reviews(soup)
+        prix = self.extract_price(soup)
+        image_filename = self.extract_and_save_image(soup)
+
+        return description, note_moyenne, nb_avis, prix, image_filename
+
+    def extract_description(self, soup):
+        """
+        Extrait la description d'une page web spécifique.
+
+        Parameters:
+        - soup (BeautifulSoup): L'objet BeautifulSoup à partir duquel la description sera extraite.
+
+        Returns:
+        - description (str): La description extraite.
+        """
+
+        # Trouver <div> de la classe "woocommerce-product-details__short-description"
+        description_div = soup.find('div', {'class': 'woocommerce-product-details__short-description'})
+
+        # Initialiser une liste vide pour stocker les paragraphes de la description
+        description_paragraphs = []
+
+        # Vérifier si l'élément <div> a été trouvé
+        if description_div:
+            # Trouver tous les éléments <p> dans le <div>
+            p_elements = description_div.find_all('p')
+
+            # Parcourir tous les éléments <p> trouvés
+            for p in p_elements:
+                # Vérifier si le texte de l'élément <p> n'est pas vide
+                if p.text.strip() != '':
+                    # Supprimer les balises <br> dans le texte de la balise <p>
+                    for br in p.findAll('br'):
+                        br.replace_with(' ')
+                    # Ajouter le texte de l'élément <p> à la liste des paragraphes de la description
+                    description_paragraphs.append(p.text.strip().replace('\n', ' '))
+        else:
+            print("Aucun élément <div> trouvé dans le contenu HTML.")
+
+        # Joindre tous les paragraphes de la description en une seule chaîne de caractères
+        description = ' '.join(description_paragraphs)
+
+        return description
+
+    def extract_rating_and_reviews(self, soup):
+        """
+        Extrait la note moyenne et le nombre d'avis d'une page web spécifique.
+
+        Parameters:
+        - soup (BeautifulSoup): L'objet BeautifulSoup 
+        à partir duquel les informations seront extraites.
+
+        Returns:
+        - note_moyenne (float): La note moyenne du fromage.
+        - nb_avis (int): Le nombre d'avis sur le fromage.
+        """
+
+        # Trouver l'élément <div> avec la classe "woocommerce-product-rating"
+        rating_div = soup.find('div', {'class': 'woocommerce-product-rating'})
+
+        # Initialiser la note moyenne et le nombre d'avis comme None
+        note_moyenne = None
+        nb_avis = None
+
+        # Vérifier si l'élément <div> a été trouvé
+        if rating_div:
+            # Trouver l'élément <strong> avec la classe "rating" pour la note moyenne
+            rating_strong = rating_div.find('strong', {'class': 'rating'})
+            if rating_strong:
+                note_moyenne = float(rating_strong.text.strip())
+
+            # Trouver l'élément <span> avec la classe "rating" pour le nombre d'avis
+            rating_span = rating_div.find('span', {'class': 'rating'})
+            if rating_span:
+                nb_avis = int(rating_span.text.strip())
+
+        return note_moyenne, nb_avis
+
+    def extract_price(self, soup):
+        """
+        Extrait le prix d'une page web spécifique.
+
+        Parameters:
+        - soup (BeautifulSoup): L'objet BeautifulSoup à partir duquel le prix sera extrait.
+
+        Returns:
+        - prix (float): Le prix du fromage.
+        """
+
+        # Trouver la balise parente <p class="price">
+        parent_tag = soup.find('p', class_='price')
+
+        # Initialiser le prix comme None
+        prix = None
+
+        # Vérifier si la balise parente a été trouvée
+        if parent_tag:
+            # Trouver l'élément <bdi> à l'intérieur de la balise parente
+            price_bdi = parent_tag.find('bdi')
+
+            # Vérifier si l'élément <bdi> a été trouvé
+            if price_bdi:
+                # Extraire le texte de l'élément <bdi> et le convertir en float
+                prix_text = price_bdi.text.strip()
+                # Supprimer le symbole € et le caractère non-breaking space ( )
+                prix_text = prix_text.replace('€', '').replace('\xa0', '')
+
+                try:
+                    # Convertir le texte en float
+                    prix = float(prix_text)
+                except ValueError as e:
+                    print(f"Erreur lors de la conversion du prix en float : {e}")
+
+        return prix
+
+    def extract_and_save_image(self, soup, save_dir='./images_fromage/'):
+        """
+        Extrait l'URL de l'image d'une page web spécifique
+        et sauvegarde l'image dans un dossier local.
+
+        Parameters:
+        - soup (BeautifulSoup): L'objet BeautifulSoup 
+        à partir duquel l'URL de l'image sera extraite.
+        - save_dir (str): Le chemin du dossier où l'image sera sauvegardée.
+
+        Returns:
+        - image_filename (str): Le nom du fichier de l'image sauvegardée.
+        """
+
+        # Trouver le <div> avec la classe "woocommerce-product-gallery__wrapper"
+        div_tag = soup.find('div', {'class': 'woocommerce-product-gallery__wrapper'})
+
+        # Initialiser le nom du fichier de l'image comme None
+        image_filename = None
+
+        # Vérifier si le <div> a été trouvé
+        if div_tag:
+            # Trouver l'élément <a> à l'intérieur du <div>
+            a_tag = div_tag.find('a')
+
+            # Vérifier si l'élément <a> a été trouvé
+            if a_tag:
+                # Extraire l'URL de l'image à partir de l'attribut 'href' de l'élément <a>
+                image_url = a_tag['href']
+
+                # Extraire le nom du fichier de l'image à partir de l'URL de l'image
+                image_filename = os.path.basename(image_url)
+
+                # Créer le dossier s'il n'existe pas déjà
+                os.makedirs(save_dir, exist_ok=True)
+
+                # Créer le chemin complet du fichier de l'image
+                image_filepath = os.path.join(save_dir, image_filename)
+
+                # Télécharger et sauvegarder l'image
+                urlretrieve(image_url, image_filepath)
+
+        return image_filename
 
     def transform(self):
         """
@@ -39,14 +230,21 @@ class FromageETL:
         Le processus implique l'analyse HTML des données,
         la récupération des informations sur les fromages
         à partir de la table HTML, et la création d'un DataFrame avec les colonnes 'fromage_names', 
-        'fromage_familles', 'pates', et 'creation_date'.
+        'fromage_familles', 'pates', 'url_info_fromage', 'descriptions',
+        'note_moyenne', 'nb_avis', 'prix', et 'images_fromage'.
         """
-        soup = BeautifulSoup(self.data, 'html.parser')
+        soup = BeautifulSoup(self.get_url_content(self.url), 'html.parser')
         cheese_dish = soup.find('table')
 
         fromage_names = []
         fromage_familles = []
         pates = []
+        url_info_fromages = []
+        descriptions = []
+        note_moyennes = []
+        nb_aviss = []
+        prixs = []
+        images_fromage = []
 
         for row in cheese_dish.find_all('tr'):
             columns = row.find_all('td')
@@ -59,18 +257,45 @@ class FromageETL:
                 fromage_famille = columns[1].text.strip()
                 pate = columns[2].text.strip()
 
+                # Chercher le lien dans la même cellule que "fromage_name"
+                link = columns[0].find('a')
+                url_info_fromage = "https://www.laboitedufromager.com" + link['href'] if link else ""
+
+                # Initialiser tout à None
+                description = None
+                note_moyenne = None
+                nb_avis = None
+                prix = None
+                image_filename = None
+
+                # Vérifier si l'URL est présente
+                if url_info_fromage:
+                    # Extraire tout du fichier de l'image depuis l'URL
+                    description, note_moyenne, nb_avis, prix, image_filename = self.extract_all(url_info_fromage)
+
                 # Ignore les lignes vides
                 if fromage_name != '' and fromage_famille != '' and pate != '':
                     fromage_names.append(fromage_name)
                     fromage_familles.append(fromage_famille)
                     pates.append(pate)
+                    url_info_fromages.append(url_info_fromage)
+                    descriptions.append(description)
+                    note_moyennes.append(note_moyenne)
+                    nb_aviss.append(nb_avis)
+                    prixs.append(prix)
+                    images_fromage.append(image_filename)
 
         self.data = pd.DataFrame({
             'fromage_names': fromage_names,
             'fromage_familles': fromage_familles,
-            'pates': pates
+            'pates': pates,
+            'url_info_fromages': url_info_fromages,
+            'descriptions': descriptions,
+            'note_moyenne': note_moyennes,
+            'nb_avis': nb_aviss,
+            'prix' : prixs,
+            'images_fromage': images_fromage
         })
-
         self.data['creation_date'] = datetime.now()
 
     def load(self, database_name, table_name):
@@ -243,18 +468,20 @@ class FromageETL:
         # Créez une nouvelle colonne 'lettre_alpha'
         data_from_db['lettre_alpha'] = data_from_db['fromage_familles'].str[0]
 
-        # Utilisez groupby pour regrouper par 'fromage_familles' et compter le nombre de fromages dans chaque groupe
+        # Utilisez groupby pour regrouper par 'fromage_familles' et compter les fromages
         grouped_data = data_from_db.groupby('fromage_familles').size().reset_index(name='fromage_nb')
 
         return grouped_data
 
 # Utilisation de la classe
+start = timeit.default_timer()
 A = 'https://www.laboitedufromager.com/liste-des-fromages-par-ordre-alphabetique/'
 fromage_etl = FromageETL(A)
-fromage_etl.extract()
+fromage_etl.extract_all(A)
 fromage_etl.transform()
 fromage_etl.load('fromages_bdd.sqlite', 'fromages_table')
 data_from_db_external = fromage_etl.read_from_database('fromages_bdd.sqlite', 'fromages_table')
 
 # Afficher le DataFrame
 print(data_from_db_external)
+print(timeit.default_timer() - start)
