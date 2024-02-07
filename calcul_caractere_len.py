@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Charger le fichier CSV
-df = pd.read_csv("C:\\Users\\HB\\Desktop\\Git Exo_Scrapping\\csv\\fromages_table.csv")
+df = pd.read_csv("C:\\Users\\HB\\Desktop\\Git Exo_Scrapping\\csv\\fromages_table.csv", delimiter=';')
 
 # Calculer la longueur maximale de la colonne "fromage_names"
 longueur_max = df['fromage_names'].apply(lambda x: len(str(x))).max()
