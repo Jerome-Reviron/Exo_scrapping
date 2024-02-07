@@ -46,7 +46,7 @@ class FromageUI:
         transformant et chargeant les données des fromages.
         """
         etl = FromageETL(url=self.URL_FROMAGE)
-        etl.extract()
+        etl.extract_all()
         etl.transform()
         data = etl.load(self.DB_NAME, self.TABLE_NAME)
         messagebox.showinfo("Mise à jour", "La base de données a été mise à jour avec succès.")
